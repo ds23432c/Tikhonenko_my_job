@@ -4,6 +4,11 @@
 <style>
 .view-btn{background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:.35rem .8rem;font-size:.8rem;cursor:pointer;transition:all .2s;}
 .view-btn.active,.view-btn:hover{background:var(--primary);color:white;border-color:var(--primary);}
+.task-link{color:var(--text);text-decoration:none;font-weight:500;}
+.task-link-done{color:var(--muted);text-decoration:line-through;opacity:.6;}
+.task-deadline{font-size:.72rem;color:var(--muted);}
+.task-deadline.overdue{color:var(--danger);}
+.task-row-overdue{background:rgba(255,101,132,0.05);}
 </style>
 {% endblock %}
 {% block content %}
@@ -36,7 +41,7 @@
             <a href="{% url 'tasks:detail' task.pk %}" style="color:var(--text);text-decoration:none;font-size:.88rem;font-weight:500">{{ task.title|truncatechars:45 }}</a>
             <span class="priority-{{ task.priority }} ms-1" style="white-space:nowrap">{{ task.get_priority_display|slice:":3" }}</span>
           </div>
-          {% if task.deadline %}<div style="color:{% if task.is_overdue %}var(--danger){% else %}var(--muted){% endif %};font-size:.72rem">⏰ {{ task.deadline|date:"d.m" }}</div>{% endif %}
+          {% if task.deadline %}<div class="task-deadline{% if task.is_overdue %} overdue{% endif %}">⏰ {{ task.deadline|date:"d.m" }}</div>{% endif %}
           <div class="d-flex gap-1 mt-1">
             <a href="{% url 'tasks:focus' task.pk %}" style="color:var(--muted);font-size:.72rem"><i class="bi bi-bullseye"></i></a>
             <a href="{% url 'tasks:pomodoro_task' task.pk %}" style="color:var(--muted);font-size:.72rem">🍅</a>
@@ -57,7 +62,7 @@
             <a href="{% url 'tasks:detail' task.pk %}" style="color:var(--text);text-decoration:none;font-size:.88rem;font-weight:500">{{ task.title|truncatechars:45 }}</a>
             <span class="priority-{{ task.priority }} ms-1" style="white-space:nowrap">{{ task.get_priority_display|slice:":3" }}</span>
           </div>
-          {% if task.deadline %}<div style="color:{% if task.is_overdue %}var(--danger){% else %}var(--muted){% endif %};font-size:.72rem">⏰ {{ task.deadline|date:"d.m" }}</div>{% endif %}
+          {% if task.deadline %}<div class="task-deadline{% if task.is_overdue %} overdue{% endif %}">⏰ {{ task.deadline|date:"d.m" }}</div>{% endif %}
         </div>
         {% endfor %}
       </div>
@@ -173,19 +178,23 @@
       <thead><tr><th>Задача</th><th>Приоритет</th><th>Статус</th><th>Дедлайн</th><th>XP</th><th></th></tr></thead>
       <tbody>
         {% for task in tasks %}
-        <tr {% if task.is_overdue %}style="background:rgba(255,101,132,0.05)"{% endif %}>
+        <tr class="{% if task.is_overdue %}task-row-overdue{% endif %}">
           <td>
             <div class="d-flex align-items-center gap-2">
               {% if task.is_pinned %}<i class="bi bi-pin-fill" style="color:var(--warning);font-size:.8rem"></i>{% endif %}
               <div>
-                <a href="{% url 'tasks:detail' task.pk %}" style="color:var(--text);text-decoration:none;font-weight:500{% if task.status == 'done' %};text-decoration:line-through;opacity:.6{% endif %}">{{ task.title }}</a>
+                {% if task.status == 'done' %}
+                <a href="{% url 'tasks:detail' task.pk %}" class="task-link task-link-done">{{ task.title }}</a>
+                {% else %}
+                <a href="{% url 'tasks:detail' task.pk %}" class="task-link">{{ task.title }}</a>
+                {% endif %}
                 {% if task.project %}<div style="color:var(--muted);font-size:.72rem"><i class="bi bi-folder me-1"></i>{{ task.project.name }}</div>{% endif %}
               </div>
             </div>
           </td>
           <td><span class="priority-{{ task.priority }}">{{ task.get_priority_display }}</span></td>
           <td><span class="status-{{ task.status }}">{{ task.get_status_display }}</span></td>
-          <td style="font-size:.82rem;color:{% if task.is_overdue %}var(--danger){% else %}var(--muted){% endif %}">
+          <td class="task-deadline{% if task.is_overdue %} overdue{% endif %}">
             {% if task.deadline %}{{ task.deadline|date:"d.m.Y" }}{% else %}—{% endif %}
           </td>
           <td style="color:var(--accent);font-size:.82rem;font-weight:600">+{{ task.xp_reward }}</td>
