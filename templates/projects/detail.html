@@ -17,7 +17,6 @@
     </div>
   </div>
 
-  <!-- Progress -->
   <div class="card-g p-3 mb-4">
     <div class="d-flex justify-content-between align-items-center mb-2">
       <span style="font-size:.85rem;color:var(--muted)">Прогресс проекта</span>
@@ -34,46 +33,57 @@
     </div>
   </div>
 
-  <!-- Kanban -->
   <div class="row g-3">
-    {% for col_status, col_label, col_color, col_tasks in 'todo,К выполнению,var(--muted),todo|in_progress,В работе,var(--primary),in_progress|paused,Пауза,var(--warning),paused|done,Готово,var(--accent),done' | split:'|' %}
     <div class="col-md-3">
       <div class="kanban-col">
-        <div class="d-flex justify-content-between mb-2">
-          <span style="font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase">{{ col_label }}</span>
-        </div>
-        {% for task in kanban|get_item:col_status %}
+        <div class="mb-2"><span style="font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase">К выполнению</span></div>
+        {% for task in kanban.todo %}
         <div class="task-card-mini">
           <a href="{% url 'tasks:detail' task.pk %}" style="color:var(--text);text-decoration:none;font-size:.85rem;font-weight:500">{{ task.title|truncatechars:40 }}</a>
           <div class="mt-1"><span class="priority-{{ task.priority }}">{{ task.get_priority_display }}</span></div>
         </div>
+        {% empty %}
+        <p style="color:var(--muted);font-size:.82rem;margin:0">Пусто 🎉</p>
         {% endfor %}
       </div>
     </div>
-    {% endfor %}
-    <!-- real render -->
-    <div class="col-md-3">
-      <div class="kanban-col">
-        <div class="mb-2"><span style="font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase">К выполнению</span></div>
-        {% for task in kanban.todo %}<div class="task-card-mini"><a href="{% url 'tasks:detail' task.pk %}" style="color:var(--text);text-decoration:none;font-size:.85rem;font-weight:500">{{ task.title|truncatechars:40 }}</a><div class="mt-1"><span class="priority-{{ task.priority }}">{{ task.get_priority_display }}</span></div></div>{% endfor %}
-      </div>
-    </div>
+
     <div class="col-md-3">
       <div class="kanban-col">
         <div class="mb-2"><span style="font-size:.78rem;font-weight:700;color:var(--primary);text-transform:uppercase">В работе</span></div>
-        {% for task in kanban.in_progress %}<div class="task-card-mini" style="border-color:rgba(108,99,255,0.3)"><a href="{% url 'tasks:detail' task.pk %}" style="color:var(--text);text-decoration:none;font-size:.85rem;font-weight:500">{{ task.title|truncatechars:40 }}</a></div>{% endfor %}
+        {% for task in kanban.in_progress %}
+        <div class="task-card-mini" style="border-color:rgba(108,99,255,0.3)">
+          <a href="{% url 'tasks:detail' task.pk %}" style="color:var(--text);text-decoration:none;font-size:.85rem;font-weight:500">{{ task.title|truncatechars:40 }}</a>
+        </div>
+        {% empty %}
+        <p style="color:var(--muted);font-size:.82rem;margin:0">Пусто 🎉</p>
+        {% endfor %}
       </div>
     </div>
+
     <div class="col-md-3">
       <div class="kanban-col">
         <div class="mb-2"><span style="font-size:.78rem;font-weight:700;color:var(--warning);text-transform:uppercase">Пауза</span></div>
-        {% for task in kanban.paused %}<div class="task-card-mini"><a href="{% url 'tasks:detail' task.pk %}" style="color:var(--text);text-decoration:none;font-size:.85rem">{{ task.title|truncatechars:40 }}</a></div>{% endfor %}
+        {% for task in kanban.paused %}
+        <div class="task-card-mini">
+          <a href="{% url 'tasks:detail' task.pk %}" style="color:var(--text);text-decoration:none;font-size:.85rem">{{ task.title|truncatechars:40 }}</a>
+        </div>
+        {% empty %}
+        <p style="color:var(--muted);font-size:.82rem;margin:0">Пусто 🎉</p>
+        {% endfor %}
       </div>
     </div>
+
     <div class="col-md-3">
       <div class="kanban-col">
         <div class="mb-2"><span style="font-size:.78rem;font-weight:700;color:var(--accent);text-transform:uppercase">Готово</span></div>
-        {% for task in kanban.done %}<div class="task-card-mini" style="opacity:.6"><a href="{% url 'tasks:detail' task.pk %}" style="color:var(--muted);text-decoration:line-through;font-size:.85rem">{{ task.title|truncatechars:40 }}</a></div>{% endfor %}
+        {% for task in kanban.done %}
+        <div class="task-card-mini" style="opacity:.6">
+          <a href="{% url 'tasks:detail' task.pk %}" style="color:var(--muted);text-decoration:line-through;font-size:.85rem">{{ task.title|truncatechars:40 }}</a>
+        </div>
+        {% empty %}
+        <p style="color:var(--muted);font-size:.82rem;margin:0">Пусто 🎉</p>
+        {% endfor %}
       </div>
     </div>
   </div>

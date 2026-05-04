@@ -22,42 +22,6 @@
 
   {% if view == 'kanban' %}
   <!-- KANBAN VIEW -->
-  <div class="row g-3">
-    {% for status_key, status_label, col_color in 'todo,К выполнению,var(--muted)|in_progress,В работе,var(--primary)|paused,На паузе,var(--warning)|done,Выполнено,var(--accent)' | split:'|' %}
-    <div class="col-md-3">
-      <div class="kanban-col" id="kanban-{{ status_key }}">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <span style="font-size:.8rem;font-weight:700;color:{{ col_color }};text-transform:uppercase;letter-spacing:.5px">{{ status_label }}</span>
-          <span style="background:rgba(255,255,255,0.1);border-radius:10px;padding:1px 8px;font-size:.75rem;color:var(--muted)" id="count-{{ status_key }}">{{ kanban|get_item:status_key|length }}</span>
-        </div>
-        {% for task in kanban|get_item:status_key %}
-        <div class="task-card-mini" draggable="true" data-task-id="{{ task.pk }}" data-status="{{ task.status }}">
-          <div class="d-flex justify-content-between align-items-start mb-1">
-            <a href="{% url 'tasks:detail' task.pk %}" style="color:var(--text);text-decoration:none;font-size:.88rem;font-weight:500;line-height:1.3">{{ task.title|truncatechars:50 }}</a>
-            <span class="priority-{{ task.priority }} ms-1">{{ task.priority|slice:":1"|upper }}</span>
-          </div>
-          {% if task.deadline %}
-          <div style="color:{% if task.is_overdue %}var(--danger){% else %}var(--muted){% endif %};font-size:.72rem"><i class="bi bi-clock me-1"></i>{{ task.deadline|date:"d.m" }}</div>
-          {% endif %}
-          {% if task.subtasks.count %}
-          <div style="color:var(--muted);font-size:.72rem;margin-top:.25rem">
-            <i class="bi bi-check2-all me-1"></i>{{ task.subtasks.filter(is_done=True).count }}/{{ task.subtasks.count }}
-          </div>
-          {% endif %}
-          <div class="d-flex gap-1 mt-2">
-            <a href="{% url 'tasks:focus' task.pk %}" class="btn btn-sm p-0 px-1" style="font-size:.7rem;color:var(--muted)"><i class="bi bi-bullseye"></i></a>
-            <a href="{% url 'tasks:pomodoro_task' task.pk %}" class="btn btn-sm p-0 px-1" style="font-size:.7rem;color:var(--muted)">🍅</a>
-          </div>
-        </div>
-        {% endfor %}
-        <button class="btn btn-sm w-100 mt-2" style="border:1px dashed var(--border);color:var(--muted);background:transparent;font-size:.78rem" onclick="window.location='{% url 'tasks:create' %}'">
-          + Добавить
-        </button>
-      </div>
-    </div>
-    {% endfor %}
-    <!-- Hack: Django template doesn't have get_item, so render each manually -->
-  </div>
   <!-- Actual kanban render -->
   <div class="row g-3 mt-1" id="real-kanban">
     <div class="col-md-3">
