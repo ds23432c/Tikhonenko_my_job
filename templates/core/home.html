@@ -20,12 +20,6 @@
           <a href="{% url 'accounts:login' %}" class="btn btn-outline-primary btn-lg px-4">Войти</a>
         </div>
         <div class="row g-3 mt-4">
-          {% for icon, label in '⚡,Геймификация|📋,Канбан-доска|🍅,Помодоро|📊,Аналитика' | split:'|' %}
-          <div class="col-3 text-center">
-            <div style="font-size:1.5rem">{{ icon }}</div>
-            <div style="font-size:.7rem;color:var(--muted);margin-top:.25rem">{{ label }}</div>
-          </div>
-          {% endfor %}
           <div class="col-3 text-center"><div style="font-size:1.5rem">⚡</div><div style="font-size:.7rem;color:var(--muted);margin-top:.25rem">Геймификация</div></div>
           <div class="col-3 text-center"><div style="font-size:1.5rem">📋</div><div style="font-size:.7rem;color:var(--muted);margin-top:.25rem">Канбан-доска</div></div>
           <div class="col-3 text-center"><div style="font-size:1.5rem">🍅</div><div style="font-size:.7rem;color:var(--muted);margin-top:.25rem">Помодоро</div></div>
@@ -44,12 +38,6 @@
           </div>
           <div class="xp-bar mb-4"><div class="xp-fill" style="width:65%"></div></div>
           <div class="row g-2 mb-3">
-            {% for status, title, count, color in 'todo,К выполнению,4,var(--muted)|in_progress,В работе,2,var(--primary)|done,Готово,12,var(--accent)' | split:'|' %}
-            <div class="col-4 text-center" style="background:var(--bg3);border-radius:8px;padding:.75rem">
-              <div style="font-family:'Orbitron',sans-serif;font-size:1.3rem;color:{{ color }};font-weight:700">{{ count }}</div>
-              <div style="font-size:.7rem;color:var(--muted)">{{ title }}</div>
-            </div>
-            {% endfor %}
             <div class="col-4 text-center" style="background:var(--bg3);border-radius:8px;padding:.75rem">
               <div style="font-family:'Orbitron',sans-serif;font-size:1.3rem;color:var(--muted);font-weight:700">4</div>
               <div style="font-size:.7rem;color:var(--muted)">К выполнению</div>
@@ -89,15 +77,48 @@
       <h2 style="font-family:'Orbitron',sans-serif;font-weight:700;font-size:1.8rem">Почему Мои Дела?</h2>
     </div>
     <div class="row g-4">
-      {% for icon, title, desc in '🎮,Геймификация,Качай персонажа выполняя реальные задачи. XP опыт уровни достижения бейджи|📋,Канбан-доска,Перетаскивай задачи между колонками — как в Trello но ещё круче|🍅,Помодоро-таймер,Встроенный таймер прямо в задачу. Работай 25 минут — отдыхай 5|🎯,Матрица Эйзенхауэра,Распределяй задачи по важности и срочности — всегда знай что делать|📊,Аналитика,Графики продуктивности серии активных дней топ-дни недели|🏆,Таблица лидеров,Соревнуйся с другими пользователями по заработанному опыту' | split:'|' %}
       <div class="col-md-4">
         <div class="card-g p-4 h-100">
-          <div style="font-size:2.5rem;margin-bottom:1rem">{{ icon }}</div>
-          <h5 style="font-weight:700;margin-bottom:.5rem">{{ title }}</h5>
-          <p style="color:var(--muted);font-size:.88rem;line-height:1.7;margin:0">{{ desc }}</p>
+          <div style="font-size:2.5rem;margin-bottom:1rem">🎮</div>
+          <h5 style="font-weight:700;margin-bottom:.5rem">Геймификация</h5>
+          <p style="color:var(--muted);font-size:.88rem;line-height:1.7;margin:0">Качай персонажа выполняя реальные задачи. XP опыт уровни достижения бейджи</p>
         </div>
       </div>
-      {% endfor %}
+      <div class="col-md-4">
+        <div class="card-g p-4 h-100">
+          <div style="font-size:2.5rem;margin-bottom:1rem">📋</div>
+          <h5 style="font-weight:700;margin-bottom:.5rem">Канбан-доска</h5>
+          <p style="color:var(--muted);font-size:.88rem;line-height:1.7;margin:0">Перетаскивай задачи между колонками — как в Trello но ещё круче</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card-g p-4 h-100">
+          <div style="font-size:2.5rem;margin-bottom:1rem">🍅</div>
+          <h5 style="font-weight:700;margin-bottom:.5rem">Помодоро-таймер</h5>
+          <p style="color:var(--muted);font-size:.88rem;line-height:1.7;margin:0">Встроенный таймер прямо в задачу. Работай 25 минут — отдыхай 5</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card-g p-4 h-100">
+          <div style="font-size:2.5rem;margin-bottom:1rem">🎯</div>
+          <h5 style="font-weight:700;margin-bottom:.5rem">Матрица Эйзенхауэра</h5>
+          <p style="color:var(--muted);font-size:.88rem;line-height:1.7;margin:0">Распределяй задачи по важности и срочности — всегда знай что делать</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card-g p-4 h-100">
+          <div style="font-size:2.5rem;margin-bottom:1rem">📊</div>
+          <h5 style="font-weight:700;margin-bottom:.5rem">Аналитика</h5>
+          <p style="color:var(--muted);font-size:.88rem;line-height:1.7;margin:0">Графики продуктивности, серии активных дней, топ-дни недели</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card-g p-4 h-100">
+          <div style="font-size:2.5rem;margin-bottom:1rem">🏆</div>
+          <h5 style="font-weight:700;margin-bottom:.5rem">Таблица лидеров</h5>
+          <p style="color:var(--muted);font-size:.88rem;line-height:1.7;margin:0">Соревнуйся с другими пользователями по заработанному опыту</p>
+        </div>
+      </div>
     </div>
   </div>
 </section>
