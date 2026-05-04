@@ -41,7 +41,8 @@ def dashboard(request):
     quests = DailyQuest.objects.filter(user=request.user, date=today)
     projects = Project.objects.filter(user=request.user, is_archived=False)[:4]
 
-    profile = request.user.game_profile
+    from apps.gamification.models import GameProfile
+    profile, _ = GameProfile.objects.get_or_create(user=request.user)
 
     # Task of the day — most urgent pending
     task_of_day = Task.objects.filter(

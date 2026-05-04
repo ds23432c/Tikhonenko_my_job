@@ -5,7 +5,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.utils import timezone
-from django.db.models import Q, Count
+from django.db.models import Q
 from .models import Task, SubTask, PomodoroSession
 from .forms import TaskForm, SubTaskForm
 
@@ -16,9 +16,7 @@ def task_list(request):
     status_f = request.GET.get('status', '')
     priority_f = request.GET.get('priority', '')
     query = request.GET.get('q', '')
-    tasks = Task.objects.filter(user=request.user).prefetch_related('subtasks', 'tags').annotate(
-        done_subtasks_count=Count('subtasks', filter=Q(subtasks__is_done=True))
-    )
+    tasks = Task.objects.filter(user=request.user).prefetch_related('subtasks', 'tags')
     if status_f:
         tasks = tasks.filter(status=status_f)
     if priority_f:

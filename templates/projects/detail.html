@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-{% load core_extras %}
 {% block title %}{{ project.name }} — Мои Дела{% endblock %}
 {% block content %}
 <div class="container py-4">
@@ -36,7 +35,23 @@
   </div>
 
   <!-- Kanban -->
-  <!-- real render -->
+  <div class="row g-3">
+    {% for col_status, col_label, col_color, col_tasks in 'todo,К выполнению,var(--muted),todo|in_progress,В работе,var(--primary),in_progress|paused,Пауза,var(--warning),paused|done,Готово,var(--accent),done' | split:'|' %}
+    <div class="col-md-3">
+      <div class="kanban-col">
+        <div class="d-flex justify-content-between mb-2">
+          <span style="font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase">{{ col_label }}</span>
+        </div>
+        {% for task in kanban|get_item:col_status %}
+        <div class="task-card-mini">
+          <a href="{% url 'tasks:detail' task.pk %}" style="color:var(--text);text-decoration:none;font-size:.85rem;font-weight:500">{{ task.title|truncatechars:40 }}</a>
+          <div class="mt-1"><span class="priority-{{ task.priority }}">{{ task.get_priority_display }}</span></div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+    <!-- real render -->
     <div class="col-md-3">
       <div class="kanban-col">
         <div class="mb-2"><span style="font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase">К выполнению</span></div>

@@ -8,13 +8,14 @@ def global_context(request):
     }
     if request.user.is_authenticated:
         try:
-            from apps.gamification.models import DailyQuest
+            from apps.gamification.models import DailyQuest, GameProfile
             from datetime import date
             ctx['pending_quests'] = DailyQuest.objects.filter(
                 user=request.user, date=date.today(), is_completed=False
             ).count()
             ctx['user_theme'] = request.user.theme
-            ctx['game_profile'] = request.user.game_profile
+            profile, _ = GameProfile.objects.get_or_create(user=request.user)
+            ctx['game_profile'] = profile
         except Exception:
             pass
     return ctx
