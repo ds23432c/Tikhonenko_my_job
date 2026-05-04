@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} — Мои Дела{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:700px">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 style="font-family:'Orbitron',sans-serif;font-weight:700;margin:0">{{ title }}</h4>
+    <a href="{% url 'tasks:list' %}" class="btn btn-outline-primary btn-sm">← Назад</a>
+  </div>
+  <div class="card-g p-4">
+    <form method="post">
+      {% csrf_token %}
+      {% for field in form %}
+      <div class="mb-3">
+        <label class="form-label">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}<div style="color:var(--danger);font-size:.78rem;margin-top:.25rem">{{ field.errors.0 }}</div>{% endif %}
+      </div>
+      {% endfor %}
+      <div class="d-flex gap-3 mt-4">
+        <button type="submit" class="btn btn-primary px-4">Сохранить</button>
+        {% if task %}<a href="{% url 'tasks:delete' task.pk %}" class="btn btn-sm" style="color:var(--danger);margin-left:auto" onclick="return confirm('Удалить задачу?')"><i class="bi bi-trash"></i></a>{% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

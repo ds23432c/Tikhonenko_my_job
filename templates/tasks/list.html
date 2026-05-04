@@ -1,0 +1,279 @@
+{% extends 'base.html' %}
+{% block title %}Задачи — Мои Дела{% endblock %}
+{% block extra_css %}
+<style>
+.view-btn{background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:.35rem .8rem;font-size:.8rem;cursor:pointer;transition:all .2s;}
+.view-btn.active,.view-btn:hover{background:var(--primary);color:white;border-color:var(--primary);}
+</style>
+{% endblock %}
+{% block content %}
+<div class="container-fluid px-3 py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h4 style="font-family:'Orbitron',sans-serif;font-weight:700;margin:0">📋 Задачи</h4>
+    <div class="d-flex gap-2 flex-wrap align-items-center">
+      <div class="d-flex gap-1">
+        <a href="?view=list{% if status_f %}&status={{ status_f }}{% endif %}" class="view-btn {% if view == 'list' %}active{% endif %}"><i class="bi bi-list-ul me-1"></i>Список</a>
+        <a href="?view=kanban" class="view-btn {% if view == 'kanban' %}active{% endif %}"><i class="bi bi-kanban me-1"></i>Канбан</a>
+        <a href="?view=matrix" class="view-btn {% if view == 'matrix' %}active{% endif %}"><i class="bi bi-grid-3x3 me-1"></i>Матрица</a>
+      </div>
+      <a href="{% url 'tasks:create' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus me-1"></i>Задача</a>
+    </div>
+  </div>
+
+  {% if view == 'kanban' %}
+  <!-- KANBAN VIEW -->
+  <div class="row g-3">
+    {% for status_key, status_label, col_color in 'todo,К выполнению,var(--muted)|in_progress,В работе,var(--primary)|paused,На паузе,var(--warning)|done,Выполнено,var(--accent)' | split:'|' %}
+    <div class="col-md-3">
+      <div class="kanban-col" id="kanban-{{ status_key }}">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span style="font-size:.8rem;font-weight:700;color:{{ col_color }};text-transform:uppercase;letter-spacing:.5px">{{ status_label }}</span>
+          <span style="background:rgba(255,255,255,0.1);border-radius:10px;padding:1px 8px;font-size:.75rem;color:var(--muted)" id="count-{{ status_key }}">{{ kanban|get_item:status_key|length }}</span>
+        </div>
+        {% for task in kanban|get_item:status_key %}
+        <div class="task-card-mini" draggable="true" data-task-id="{{ task.pk }}" data-status="{{ task.status }}">
+          <div class="d-flex justify-content-between align-items-start mb-1">
+            <a href="{% url 'tasks:detail' task.pk %}" style="color:var(--text);text-decoration:none;font-size:.88rem;font-weight:500;line-height:1.3">{{ task.title|truncatechars:50 }}</a>
+            <span class="priority-{{ task.priority }} ms-1">{{ task.priority|slice:":1"|upper }}</span>
+          </div>
+          {% if task.deadline %}
+          <div style="color:{% if task.is_overdue %}var(--danger){% else %}var(--muted){% endif %};font-size:.72rem"><i class="bi bi-clock me-1"></i>{{ task.deadline|date:"d.m" }}</div>
+          {% endif %}
+          {% if task.subtasks.count %}
+          <div style="color:var(--muted);font-size:.72rem;margin-top:.25rem">
+            <i class="bi bi-check2-all me-1"></i>{{ task.subtasks.filter(is_done=True).count }}/{{ task.subtasks.count }}
+          </div>
+          {% endif %}
+          <div class="d-flex gap-1 mt-2">
+            <a href="{% url 'tasks:focus' task.pk %}" class="btn btn-sm p-0 px-1" style="font-size:.7rem;color:var(--muted)"><i class="bi bi-bullseye"></i></a>
+            <a href="{% url 'tasks:pomodoro_task' task.pk %}" class="btn btn-sm p-0 px-1" style="font-size:.7rem;color:var(--muted)">🍅</a>
+          </div>
+        </div>
+        {% endfor %}
+        <button class="btn btn-sm w-100 mt-2" style="border:1px dashed var(--border);color:var(--muted);background:transparent;font-size:.78rem" onclick="window.location='{% url 'tasks:create' %}'">
+          + Добавить
+        </button>
+      </div>
+    </div>
+    {% endfor %}
+    <!-- Hack: Django template doesn't have get_item, so render each manually -->
+  </div>
+  <!-- Actual kanban render -->
+  <div class="row g-3 mt-1" id="real-kanban">
+    <div class="col-md-3">
+      <div class="kanban-col" id="col-todo" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="drop(event,'todo')">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span style="font-size:.8rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">К выполнению</span>
+          <span style="background:rgba(255,255,255,0.1);border-radius:10px;padding:1px 8px;font-size:.75rem;color:var(--muted)">{{ kanban.todo.count }}</span>
+        </div>
+        {% for task in kanban.todo %}
+        <div class="task-card-mini" draggable="true" data-task-id="{{ task.pk }}" ondragstart="drag(event)">
+          <div class="d-flex justify-content-between align-items-start mb-1">
+            <a href="{% url 'tasks:detail' task.pk %}" style="color:var(--text);text-decoration:none;font-size:.88rem;font-weight:500">{{ task.title|truncatechars:45 }}</a>
+            <span class="priority-{{ task.priority }} ms-1" style="white-space:nowrap">{{ task.get_priority_display|slice:":3" }}</span>
+          </div>
+          {% if task.deadline %}<div style="color:{% if task.is_overdue %}var(--danger){% else %}var(--muted){% endif %};font-size:.72rem">⏰ {{ task.deadline|date:"d.m" }}</div>{% endif %}
+          <div class="d-flex gap-1 mt-1">
+            <a href="{% url 'tasks:focus' task.pk %}" style="color:var(--muted);font-size:.72rem"><i class="bi bi-bullseye"></i></a>
+            <a href="{% url 'tasks:pomodoro_task' task.pk %}" style="color:var(--muted);font-size:.72rem">🍅</a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="kanban-col" id="col-in_progress" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="drop(event,'in_progress')">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span style="font-size:.8rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.5px">В работе</span>
+          <span style="background:rgba(108,99,255,0.15);border-radius:10px;padding:1px 8px;font-size:.75rem;color:var(--primary)">{{ kanban.in_progress.count }}</span>
+        </div>
+        {% for task in kanban.in_progress %}
+        <div class="task-card-mini" draggable="true" data-task-id="{{ task.pk }}" ondragstart="drag(event)" style="border-color:rgba(108,99,255,0.3)">
+          <div class="d-flex justify-content-between align-items-start mb-1">
+            <a href="{% url 'tasks:detail' task.pk %}" style="color:var(--text);text-decoration:none;font-size:.88rem;font-weight:500">{{ task.title|truncatechars:45 }}</a>
+            <span class="priority-{{ task.priority }} ms-1" style="white-space:nowrap">{{ task.get_priority_display|slice:":3" }}</span>
+          </div>
+          {% if task.deadline %}<div style="color:{% if task.is_overdue %}var(--danger){% else %}var(--muted){% endif %};font-size:.72rem">⏰ {{ task.deadline|date:"d.m" }}</div>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="kanban-col" id="col-paused" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="drop(event,'paused')">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span style="font-size:.8rem;font-weight:700;color:var(--warning);text-transform:uppercase;letter-spacing:.5px">На паузе</span>
+          <span style="background:rgba(255,167,38,0.15);border-radius:10px;padding:1px 8px;font-size:.75rem;color:var(--warning)">{{ kanban.paused.count }}</span>
+        </div>
+        {% for task in kanban.paused %}
+        <div class="task-card-mini" draggable="true" data-task-id="{{ task.pk }}" ondragstart="drag(event)">
+          <a href="{% url 'tasks:detail' task.pk %}" style="color:var(--text);text-decoration:none;font-size:.88rem;font-weight:500">{{ task.title|truncatechars:45 }}</a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="kanban-col" id="col-done" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="drop(event,'done')">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span style="font-size:.8rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.5px">Выполнено</span>
+          <span style="background:rgba(67,233,123,0.15);border-radius:10px;padding:1px 8px;font-size:.75rem;color:var(--accent)">{{ kanban.done.count }}</span>
+        </div>
+        {% for task in kanban.done %}
+        <div class="task-card-mini" draggable="true" data-task-id="{{ task.pk }}" ondragstart="drag(event)" style="opacity:.6">
+          <a href="{% url 'tasks:detail' task.pk %}" style="color:var(--muted);text-decoration:line-through;font-size:.88rem">{{ task.title|truncatechars:45 }}</a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  {% elif view == 'matrix' %}
+  <!-- MATRIX VIEW (Eisenhower) -->
+  <div class="mb-2" style="color:var(--muted);font-size:.85rem">Матрица Эйзенхауэра — распределяй задачи по важности и срочности</div>
+  <div class="row g-3">
+    <div class="col-md-6">
+      <div class="card-g p-3" style="border-color:rgba(255,101,132,0.4)">
+        <h6 style="color:var(--danger);font-weight:700;margin-bottom:1rem">🔴 Важно + Срочно<br><small style="font-size:.72rem;font-weight:400;opacity:.8">Делай сам немедленно</small></h6>
+        {% for task in matrix.important_urgent %}
+        <div class="d-flex gap-2 py-2" style="border-bottom:1px solid var(--border)">
+          <a href="{% url 'tasks:detail' task.pk %}" style="color:var(--text);text-decoration:none;font-size:.88rem;flex-grow:1">{{ task.title }}</a>
+          <span class="status-{{ task.status }}">{{ task.get_status_display }}</span>
+        </div>
+        {% empty %}<p style="color:var(--muted);font-size:.82rem;margin:0">Пусто 🎉</p>{% endfor %}
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card-g p-3" style="border-color:rgba(108,99,255,0.4)">
+        <h6 style="color:var(--primary);font-weight:700;margin-bottom:1rem">🔵 Важно, не срочно<br><small style="font-size:.72rem;font-weight:400;opacity:.8">Запланируй время</small></h6>
+        {% for task in matrix.important_not_urgent %}
+        <div class="d-flex gap-2 py-2" style="border-bottom:1px solid var(--border)">
+          <a href="{% url 'tasks:detail' task.pk %}" style="color:var(--text);text-decoration:none;font-size:.88rem;flex-grow:1">{{ task.title }}</a>
+          <span class="status-{{ task.status }}">{{ task.get_status_display }}</span>
+        </div>
+        {% empty %}<p style="color:var(--muted);font-size:.82rem;margin:0">Нет задач</p>{% endfor %}
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card-g p-3" style="border-color:rgba(255,167,38,0.4)">
+        <h6 style="color:var(--warning);font-weight:700;margin-bottom:1rem">🟡 Срочно, не важно<br><small style="font-size:.72rem;font-weight:400;opacity:.8">Делегируй или оптимизируй</small></h6>
+        {% for task in matrix.not_important_urgent %}
+        <div class="d-flex gap-2 py-2" style="border-bottom:1px solid var(--border)">
+          <a href="{% url 'tasks:detail' task.pk %}" style="color:var(--text);text-decoration:none;font-size:.88rem;flex-grow:1">{{ task.title }}</a>
+          <span class="status-{{ task.status }}">{{ task.get_status_display }}</span>
+        </div>
+        {% empty %}<p style="color:var(--muted);font-size:.82rem;margin:0">Нет задач</p>{% endfor %}
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card-g p-3" style="border-color:rgba(67,233,123,0.2)">
+        <h6 style="color:var(--muted);font-weight:700;margin-bottom:1rem">⚪ Не важно, не срочно<br><small style="font-size:.72rem;font-weight:400;opacity:.8">Удали или отложи</small></h6>
+        {% for task in matrix.not_important_not_urgent %}
+        <div class="d-flex gap-2 py-2" style="border-bottom:1px solid var(--border)">
+          <a href="{% url 'tasks:detail' task.pk %}" style="color:var(--text);text-decoration:none;font-size:.88rem;flex-grow:1">{{ task.title }}</a>
+          <span class="status-{{ task.status }}">{{ task.get_status_display }}</span>
+        </div>
+        {% empty %}<p style="color:var(--muted);font-size:.82rem;margin:0">Нет задач</p>{% endfor %}
+      </div>
+    </div>
+  </div>
+
+  {% else %}
+  <!-- LIST VIEW -->
+  <div class="card-g p-3 mb-3">
+    <form method="get" class="row g-2 align-items-end">
+      <input type="hidden" name="view" value="list">
+      <div class="col-md-4">
+        <input type="text" name="q" class="form-control form-control-sm" placeholder="Поиск задач..." value="{{ query }}">
+      </div>
+      <div class="col-md-2">
+        <select name="status" class="form-select form-select-sm">
+          <option value="">Все статусы</option>
+          {% for val, label in status_choices %}
+          <option value="{{ val }}" {% if status_f == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <select name="priority" class="form-select form-select-sm">
+          <option value="">Все приоритеты</option>
+          {% for val, label in priority_choices %}
+          <option value="{{ val }}" {% if priority_f == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2"><button type="submit" class="btn btn-primary btn-sm w-100">Фильтр</button></div>
+      {% if query or status_f or priority_f %}<div class="col-md-2"><a href="?view=list" class="btn btn-outline-primary btn-sm w-100">Сбросить</a></div>{% endif %}
+    </form>
+  </div>
+  <div class="card-g overflow-hidden">
+    <table class="table table-g mb-0">
+      <thead><tr><th>Задача</th><th>Приоритет</th><th>Статус</th><th>Дедлайн</th><th>XP</th><th></th></tr></thead>
+      <tbody>
+        {% for task in tasks %}
+        <tr {% if task.is_overdue %}style="background:rgba(255,101,132,0.05)"{% endif %}>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              {% if task.is_pinned %}<i class="bi bi-pin-fill" style="color:var(--warning);font-size:.8rem"></i>{% endif %}
+              <div>
+                <a href="{% url 'tasks:detail' task.pk %}" style="color:var(--text);text-decoration:none;font-weight:500{% if task.status == 'done' %};text-decoration:line-through;opacity:.6{% endif %}">{{ task.title }}</a>
+                {% if task.project %}<div style="color:var(--muted);font-size:.72rem"><i class="bi bi-folder me-1"></i>{{ task.project.name }}</div>{% endif %}
+              </div>
+            </div>
+          </td>
+          <td><span class="priority-{{ task.priority }}">{{ task.get_priority_display }}</span></td>
+          <td><span class="status-{{ task.status }}">{{ task.get_status_display }}</span></td>
+          <td style="font-size:.82rem;color:{% if task.is_overdue %}var(--danger){% else %}var(--muted){% endif %}">
+            {% if task.deadline %}{{ task.deadline|date:"d.m.Y" }}{% else %}—{% endif %}
+          </td>
+          <td style="color:var(--accent);font-size:.82rem;font-weight:600">+{{ task.xp_reward }}</td>
+          <td>
+            <div class="d-flex gap-1">
+              {% if task.status != 'done' %}
+              <button class="btn btn-sm btn-accent complete-btn py-0 px-2" data-task-id="{{ task.pk }}" style="font-size:.78rem">✓</button>
+              {% endif %}
+              <a href="{% url 'tasks:edit' task.pk %}" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:.78rem"><i class="bi bi-pencil"></i></a>
+              <a href="{% url 'tasks:focus' task.pk %}" class="btn btn-sm py-0 px-2" style="font-size:.78rem;color:var(--muted)"><i class="bi bi-bullseye"></i></a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--muted)">
+          Задач не найдено. <a href="{% url 'tasks:create' %}" style="color:var(--primary)">Создать →</a>
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+// Complete task
+document.querySelectorAll('.complete-btn').forEach(btn => {
+  btn.addEventListener('click', async function() {
+    const taskId = this.dataset.taskId;
+    const resp = await fetch(`/tasks/${taskId}/complete/`, {method:'POST',headers:{'X-CSRFToken':getCookie('csrftoken')}});
+    const data = await resp.json();
+    if (data.success) { showXPPopup(data.xp); setTimeout(()=>location.reload(), 1500); }
+  });
+});
+
+// Drag & drop kanban
+let draggedTaskId = null;
+function drag(e) {
+  draggedTaskId = e.target.closest('.task-card-mini').dataset.taskId;
+  e.target.closest('.task-card-mini').classList.add('dragging');
+}
+async function drop(e, newStatus) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if (!draggedTaskId) return;
+  await fetch(`/tasks/${draggedTaskId}/status/`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},
+    body: JSON.stringify({status: newStatus})
+  });
+  location.reload();
+}
+</script>
+{% endblock %}

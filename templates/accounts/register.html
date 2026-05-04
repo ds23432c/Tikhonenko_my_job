@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}Регистрация — Мои Дела{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-5">
+      <div class="card-g p-4 p-md-5">
+        <div class="text-center mb-4">
+          <div style="font-size:3rem;margin-bottom:.5rem">🚀</div>
+          <h3 style="font-family:'Orbitron',sans-serif;font-weight:700">Регистрация</h3>
+          <p style="color:var(--muted);font-size:.85rem">Начни свой путь к продуктивности!</p>
+        </div>
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label">Имя пользователя</label>
+            {{ form.username }}
+            {% if form.username.errors %}<div style="color:var(--danger);font-size:.78rem;margin-top:.25rem">{{ form.username.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            {{ form.email }}
+            {% if form.email.errors %}<div style="color:var(--danger);font-size:.78rem;margin-top:.25rem">{{ form.email.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Пароль</label>
+            {{ form.password1 }}
+            {% if form.password1.errors %}<div style="color:var(--danger);font-size:.78rem;margin-top:.25rem">{{ form.password1.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="mb-4">
+            <label class="form-label">Повторите пароль</label>
+            {{ form.password2 }}
+            {% if form.password2.errors %}<div style="color:var(--danger);font-size:.78rem;margin-top:.25rem">{{ form.password2.errors.0 }}</div>{% endif %}
+          </div>
+          {% if form.non_field_errors %}<div class="alert alert-danger py-2">{{ form.non_field_errors.0 }}</div>{% endif %}
+          <button type="submit" class="btn btn-primary w-100 py-2">
+            <i class="bi bi-rocket me-2"></i>Создать аккаунт
+          </button>
+        </form>
+        <p class="text-center mt-3 mb-0" style="color:var(--muted);font-size:.85rem">
+          Уже есть аккаунт? <a href="{% url 'accounts:login' %}" style="color:var(--primary)">Войти</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

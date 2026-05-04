@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Проекты — Мои Дела{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 style="font-family:'Orbitron',sans-serif;font-weight:700;margin:0">📁 Проекты</h4>
+    <a href="{% url 'projects:create' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus me-1"></i>Новый проект</a>
+  </div>
+  <div class="row g-3">
+    {% for project in projects %}
+    <div class="col-md-4">
+      <div class="card-g p-4 h-100">
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <span style="font-size:1.5rem">{{ project.icon }}</span>
+          <div>
+            <a href="{% url 'projects:detail' project.pk %}" style="color:var(--text);text-decoration:none;font-weight:700;font-size:1rem">{{ project.name }}</a>
+            {% if project.deadline %}<div style="color:var(--muted);font-size:.75rem">до {{ project.deadline|date:"d.m.Y" }}</div>{% endif %}
+          </div>
+        </div>
+        {% if project.description %}<p style="color:var(--muted);font-size:.85rem;line-height:1.6;margin-bottom:1rem">{{ project.description|truncatechars:80 }}</p>{% endif %}
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <span style="font-size:.78rem;color:var(--muted)">Прогресс</span>
+          <span style="font-size:.78rem;color:{{ project.color }};font-weight:700">{{ project.progress }}%</span>
+        </div>
+        <div style="background:rgba(255,255,255,0.08);border-radius:4px;height:6px;overflow:hidden;margin-bottom:1rem">
+          <div style="background:{{ project.color }};width:{{ project.progress }}%;height:100%;border-radius:4px;transition:width .5s ease"></div>
+        </div>
+        <div class="d-flex justify-content-between align-items-center">
+          <span style="font-size:.8rem;color:var(--muted)">{{ project.tasks.count }} задач</span>
+          <div class="d-flex gap-1">
+            <a href="{% url 'projects:edit' project.pk %}" class="btn btn-sm py-0 px-2" style="color:var(--muted)"><i class="bi bi-pencil"></i></a>
+            <a href="{% url 'projects:archive' project.pk %}" class="btn btn-sm py-0 px-2" style="color:var(--muted)" onclick="return confirm('Архивировать?')"><i class="bi bi-archive"></i></a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5">
+      <div style="font-size:3rem;margin-bottom:1rem">📁</div>
+      <p style="color:var(--muted)">Проектов нет. Создай первый!</p>
+      <a href="{% url 'projects:create' %}" class="btn btn-primary">Создать проект</a>
+    </div>
+    {% endfor %}
+  </div>
+  {% if archived %}
+  <div class="mt-4">
+    <h6 style="color:var(--muted);font-size:.8rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:1rem">Архив</h6>
+    <div class="row g-2">
+      {% for project in archived %}
+      <div class="col-md-4">
+        <div class="card-g p-3 d-flex align-items-center gap-2" style="opacity:.5">
+          <span>{{ project.icon }}</span>
+          <span style="flex-grow:1;font-size:.88rem">{{ project.name }}</span>
+          <a href="{% url 'projects:archive' project.pk %}" class="btn btn-sm py-0 px-2" style="font-size:.75rem;color:var(--primary)">Восстановить</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

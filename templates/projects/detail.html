@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}{{ project.name }} — Мои Дела{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div class="d-flex align-items-center gap-3">
+      <a href="{% url 'projects:list' %}" style="color:var(--muted);text-decoration:none;font-size:.85rem">← Проекты</a>
+      <span style="font-size:1.5rem">{{ project.icon }}</span>
+      <div>
+        <h4 style="font-family:'Orbitron',sans-serif;font-weight:700;margin:0">{{ project.name }}</h4>
+        {% if project.deadline %}<span style="color:var(--muted);font-size:.8rem">до {{ project.deadline|date:"d.m.Y" }}</span>{% endif %}
+      </div>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'projects:edit' project.pk %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-pencil me-1"></i>Изменить</a>
+      <a href="{% url 'tasks:create' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus me-1"></i>Задача</a>
+    </div>
+  </div>
+
+  <!-- Progress -->
+  <div class="card-g p-3 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <span style="font-size:.85rem;color:var(--muted)">Прогресс проекта</span>
+      <span style="font-size:1rem;font-weight:700;color:{{ project.color }}">{{ project.progress }}%</span>
+    </div>
+    <div style="background:rgba(255,255,255,0.08);border-radius:6px;height:10px;overflow:hidden">
+      <div style="background:{{ project.color }};width:{{ project.progress }}%;height:100%;border-radius:6px;transition:width .5s"></div>
+    </div>
+    <div class="row g-2 mt-2">
+      <div class="col-3 text-center"><div style="font-weight:700;color:var(--muted)">{{ tasks.count }}</div><div style="font-size:.72rem;color:var(--muted)">Всего</div></div>
+      <div class="col-3 text-center"><div style="font-weight:700;color:var(--primary)">{{ kanban.in_progress.count }}</div><div style="font-size:.72rem;color:var(--muted)">В работе</div></div>
+      <div class="col-3 text-center"><div style="font-weight:700;color:var(--accent)">{{ kanban.done.count }}</div><div style="font-size:.72rem;color:var(--muted)">Готово</div></div>
+      <div class="col-3 text-center"><div style="font-weight:700;color:var(--warning)">{{ kanban.paused.count }}</div><div style="font-size:.72rem;color:var(--muted)">Пауза</div></div>
+    </div>
+  </div>
+
+  <!-- Kanban -->
+  <div class="row g-3">
+    {% for col_status, col_label, col_color, col_tasks in 'todo,К выполнению,var(--muted),todo|in_progress,В работе,var(--primary),in_progress|paused,Пауза,var(--warning),paused|done,Готово,var(--accent),done' | split:'|' %}
+    <div class="col-md-3">
+      <div class="kanban-col">
+        <div class="d-flex justify-content-between mb-2">
+          <span style="font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase">{{ col_label }}</span>
+        </div>
+        {% for task in kanban|get_item:col_status %}
+        <div class="task-card-mini">
+          <a href="{% url 'tasks:detail' task.pk %}" style="color:var(--text);text-decoration:none;font-size:.85rem;font-weight:500">{{ task.title|truncatechars:40 }}</a>
+          <div class="mt-1"><span class="priority-{{ task.priority }}">{{ task.get_priority_display }}</span></div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+    <!-- real render -->
+    <div class="col-md-3">
+      <div class="kanban-col">
+        <div class="mb-2"><span style="font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase">К выполнению</span></div>
+        {% for task in kanban.todo %}<div class="task-card-mini"><a href="{% url 'tasks:detail' task.pk %}" style="color:var(--text);text-decoration:none;font-size:.85rem;font-weight:500">{{ task.title|truncatechars:40 }}</a><div class="mt-1"><span class="priority-{{ task.priority }}">{{ task.get_priority_display }}</span></div></div>{% endfor %}
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="kanban-col">
+        <div class="mb-2"><span style="font-size:.78rem;font-weight:700;color:var(--primary);text-transform:uppercase">В работе</span></div>
+        {% for task in kanban.in_progress %}<div class="task-card-mini" style="border-color:rgba(108,99,255,0.3)"><a href="{% url 'tasks:detail' task.pk %}" style="color:var(--text);text-decoration:none;font-size:.85rem;font-weight:500">{{ task.title|truncatechars:40 }}</a></div>{% endfor %}
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="kanban-col">
+        <div class="mb-2"><span style="font-size:.78rem;font-weight:700;color:var(--warning);text-transform:uppercase">Пауза</span></div>
+        {% for task in kanban.paused %}<div class="task-card-mini"><a href="{% url 'tasks:detail' task.pk %}" style="color:var(--text);text-decoration:none;font-size:.85rem">{{ task.title|truncatechars:40 }}</a></div>{% endfor %}
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="kanban-col">
+        <div class="mb-2"><span style="font-size:.78rem;font-weight:700;color:var(--accent);text-transform:uppercase">Готово</span></div>
+        {% for task in kanban.done %}<div class="task-card-mini" style="opacity:.6"><a href="{% url 'tasks:detail' task.pk %}" style="color:var(--muted);text-decoration:line-through;font-size:.85rem">{{ task.title|truncatechars:40 }}</a></div>{% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

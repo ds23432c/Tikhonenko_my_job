@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}Сегодня — Мои Дела{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:700px">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 style="font-family:'Orbitron',sans-serif;font-weight:700;margin-bottom:.1rem">☀️ Сегодня</h4>
+      <p style="color:var(--muted);font-size:.85rem;margin:0">{{ today|date:"l, d F Y" }}</p>
+    </div>
+    <a href="{% url 'tasks:create' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus me-1"></i>Запланировать</a>
+  </div>
+
+  {% if overdue %}
+  <div class="card-g p-3 mb-3" style="border-color:rgba(255,101,132,0.3)">
+    <h6 style="color:var(--danger);font-weight:700;margin-bottom:1rem">⚠️ Просроченные задачи</h6>
+    {% for task in overdue %}
+    <div class="d-flex align-items-center gap-2 py-2" style="border-bottom:1px solid var(--border)">
+      <button class="btn btn-sm p-0 complete-btn" data-task-id="{{ task.pk }}" style="width:22px;height:22px;border-radius:50%;border:2px solid var(--danger);background:transparent;color:var(--danger);flex-shrink:0">○</button>
+      <div class="flex-grow-1">
+        <a href="{% url 'tasks:detail' task.pk %}" style="color:var(--text);text-decoration:none;font-size:.9rem;font-weight:500">{{ task.title }}</a>
+        <div style="color:var(--danger);font-size:.75rem">дедлайн был {{ task.deadline|date:"d.m.Y" }}</div>
+      </div>
+      <span class="priority-{{ task.priority }}">{{ task.get_priority_display }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="card-g p-3">
+    <h6 style="font-weight:700;margin-bottom:1rem">📅 Запланировано на сегодня</h6>
+    {% for task in tasks %}
+    <div class="d-flex align-items-center gap-2 py-2" style="border-bottom:1px solid var(--border)">
+      <button class="btn btn-sm p-0 complete-btn" data-task-id="{{ task.pk }}" style="width:22px;height:22px;border-radius:50%;border:2px solid {% if task.status == 'done' %}var(--accent){% else %}var(--primary){% endif %};background:{% if task.status == 'done' %}var(--accent){% else %}transparent{% endif %};color:{% if task.status == 'done' %}#000{% else %}var(--primary){% endif %};flex-shrink:0">
+        {% if task.status == 'done' %}✓{% endif %}
+      </button>
+      <div class="flex-grow-1">
+        <a href="{% url 'tasks:detail' task.pk %}" style="color:var(--text);text-decoration:none;font-size:.9rem;font-weight:500{% if task.status == 'done' %};text-decoration:line-through;opacity:.5{% endif %}">{{ task.title }}</a>
+        {% if task.scheduled_time %}<div style="color:var(--muted);font-size:.75rem">⏰ {{ task.scheduled_time|time:"H:i" }}</div>{% endif %}
+      </div>
+      <div class="d-flex gap-1">
+        <span class="priority-{{ task.priority }}">{{ task.get_priority_display }}</span>
+        <a href="{% url 'tasks:focus' task.pk %}" style="color:var(--muted);font-size:.82rem"><i class="bi bi-bullseye"></i></a>
+      </div>
+    </div>
+    {% empty %}
+    <div class="text-center py-4">
+      <div style="font-size:3rem;margin-bottom:1rem">🎉</div>
+      <p style="color:var(--muted)">На сегодня задач нет!</p>
+      <a href="{% url 'tasks:create' %}" class="btn btn-primary btn-sm">Запланировать задачу</a>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.querySelectorAll('.complete-btn').forEach(btn => {
+  btn.addEventListener('click', async function() {
+    const resp = await fetch(`/tasks/${this.dataset.taskId}/complete/`, {method:'POST',headers:{'X-CSRFToken':getCookie('csrftoken')}});
+    const data = await resp.json();
+    if (data.success) { showXPPopup(data.xp); setTimeout(()=>location.reload(), 1200); }
+  });
+});
+</script>
+{% endblock %}

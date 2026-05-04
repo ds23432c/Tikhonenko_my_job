@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}Пользователи — Админ{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="row g-4">
+    <div class="col-lg-3">
+      <div class="card-g p-3">
+        <div style="font-family:'Orbitron',sans-serif;font-weight:700;color:var(--primary);font-size:.9rem;padding:.5rem 1rem;margin-bottom:.5rem">⚙️ АДМИН</div>
+        <nav class="d-flex flex-column gap-1">
+          <a href="{% url 'admin_panel:dashboard' %}" class="sidebar-link"><i class="bi bi-speedometer2"></i>Дашборд</a>
+          <a href="{% url 'admin_panel:users' %}" class="sidebar-link active"><i class="bi bi-people"></i>Пользователи</a>
+          <a href="{% url 'admin_panel:achievements' %}" class="sidebar-link"><i class="bi bi-trophy"></i>Достижения</a>
+          <hr style="border-color:var(--border)">
+          <a href="{% url 'core:home' %}" class="sidebar-link"><i class="bi bi-house"></i>На сайт</a>
+        </nav>
+      </div>
+    </div>
+    <div class="col-lg-9">
+      <h4 style="font-family:'Orbitron',sans-serif;font-weight:700;margin-bottom:1.5rem">👥 Пользователи ({{ users.count }})</h4>
+      <div class="card-g overflow-hidden">
+        <table class="table table-g mb-0">
+          <thead>
+            <tr>
+              <th>Пользователь</th>
+              <th>Email</th>
+              <th>Уровень</th>
+              <th>XP</th>
+              <th>Задач</th>
+              <th>Серия</th>
+              <th>Статус</th>
+              <th>Действие</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for u in users %}
+            <tr>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <span style="font-size:1.2rem">{{ u.avatar_emoji }}</span>
+                  <span style="font-weight:600;font-size:.88rem">{{ u.username }}</span>
+                  {% if u.is_staff %}<span style="background:rgba(255,101,132,0.15);color:var(--danger);border-radius:4px;padding:1px 6px;font-size:.68rem">ADMIN</span>{% endif %}
+                </div>
+              </td>
+              <td style="font-size:.82rem;color:var(--muted)">{{ u.email }}</td>
+              <td style="font-size:.85rem">
+                {% if u.game_profile %}Ур.{{ u.game_profile.level }}{% else %}—{% endif %}
+              </td>
+              <td style="color:var(--accent);font-size:.85rem;font-weight:600">
+                {% if u.game_profile %}{{ u.game_profile.xp }}{% else %}0{% endif %}
+              </td>
+              <td style="font-size:.85rem">
+                {% if u.game_profile %}{{ u.game_profile.tasks_completed }}{% else %}0{% endif %}
+              </td>
+              <td style="color:var(--warning);font-size:.85rem">
+                {% if u.game_profile %}🔥{{ u.game_profile.streak }}{% else %}—{% endif %}
+              </td>
+              <td>
+                {% if u.is_active %}
+                <span style="color:var(--accent);font-size:.8rem;font-weight:600">● Активен</span>
+                {% else %}
+                <span style="color:var(--danger);font-size:.8rem;font-weight:600">● Блок</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if not u.is_superuser %}
+                <a href="{% url 'admin_panel:toggle_user' u.pk %}" class="btn btn-sm py-0 px-2 {% if u.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}" style="font-size:.75rem">
+                  {% if u.is_active %}Блок{% else %}Разблок{% endif %}
+                </a>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+{% block title %}Дашборд — Мои Дела{% endblock %}
+{% block content %}
+<div class="container-fluid px-3 py-4">
+  <div class="row g-3">
+
+    <!-- Left sidebar -->
+    <div class="col-lg-2 d-none d-lg-block">
+      <nav class="d-flex flex-column gap-1 sticky-top" style="top:70px">
+        <a class="sidebar-link active" href="{% url 'core:dashboard' %}"><i class="bi bi-grid"></i>Дашборд</a>
+        <a class="sidebar-link" href="{% url 'tasks:today' %}"><i class="bi bi-sun"></i>Сегодня</a>
+        <a class="sidebar-link" href="{% url 'tasks:list' %}"><i class="bi bi-check2-square"></i>Все задачи</a>
+        <a class="sidebar-link" href="{% url 'tasks:list' %}?view=kanban"><i class="bi bi-kanban"></i>Канбан</a>
+        <a class="sidebar-link" href="{% url 'tasks:list' %}?view=matrix"><i class="bi bi-grid-3x3"></i>Матрица</a>
+        <a class="sidebar-link" href="{% url 'projects:list' %}"><i class="bi bi-folder"></i>Проекты</a>
+        <a class="sidebar-link" href="{% url 'tasks:pomodoro' %}"><i class="bi bi-stopwatch"></i>Помодоро</a>
+        <a class="sidebar-link" href="{% url 'analytics:dashboard' %}"><i class="bi bi-bar-chart"></i>Аналитика</a>
+        <hr style="border-color:var(--border)">
+        <a class="sidebar-link" href="{% url 'gamification:quests' %}"><i class="bi bi-lightning"></i>Квесты{% if pending_quests %} <span style="background:var(--warning);color:#000;border-radius:10px;padding:1px 6px;font-size:.7rem;font-weight:700;margin-left:auto">{{ pending_quests }}</span>{% endif %}</a>
+        <a class="sidebar-link" href="{% url 'gamification:achievements' %}"><i class="bi bi-trophy"></i>Ачивки</a>
+        <a class="sidebar-link" href="{% url 'gamification:leaderboard' %}"><i class="bi bi-bar-chart-steps"></i>Рейтинг</a>
+        <a class="sidebar-link" href="{% url 'gamification:shop' %}"><i class="bi bi-shop"></i>Магазин</a>
+      </nav>
+    </div>
+
+    <!-- Main content -->
+    <div class="col-lg-7">
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h4 style="font-family:'Orbitron',sans-serif;font-weight:700;margin-bottom:.1rem">
+            {{ user.avatar_emoji }} Привет, {{ user.username }}!
+          </h4>
+          <p style="color:var(--muted);font-size:.85rem;margin:0">{{ today|date:"l, d F Y" }} · {{ daily_quote }}</p>
+        </div>
+        <a href="{% url 'tasks:create' %}" class="btn btn-primary btn-sm">
+          <i class="bi bi-plus me-1"></i>Задача
+        </a>
+      </div>
+
+      <!-- Task of the day -->
+      {% if task_of_day %}
+      <div class="card-g p-3 mb-3" style="border-color:rgba(108,99,255,0.4);background:linear-gradient(135deg,var(--card),var(--bg3))">
+        <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:1px;color:var(--primary);margin-bottom:.5rem;font-weight:700">⭐ Задача дня</div>
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <div style="font-weight:600;font-size:1rem">{{ task_of_day.title }}</div>
+            <span class="priority-{{ task_of_day.priority }}">{{ task_of_day.get_priority_display }}</span>
+          </div>
+          <div class="d-flex gap-2">
+            <a href="{% url 'tasks:focus' task_of_day.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-bullseye me-1"></i>Фокус</a>
+            <button class="btn btn-sm btn-accent complete-btn" data-task-id="{{ task_of_day.pk }}">✓</button>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Today tasks -->
+      <div class="card-g p-3 mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 style="font-weight:700;margin:0">📅 На сегодня</h6>
+          <a href="{% url 'tasks:today' %}" style="color:var(--primary);font-size:.82rem">Все →</a>
+        </div>
+        {% for task in today_tasks %}
+        <div class="d-flex align-items-center gap-2 py-2" style="border-bottom:1px solid var(--border)">
+          <button class="btn btn-sm p-0 complete-btn" data-task-id="{{ task.pk }}" style="width:22px;height:22px;border-radius:50%;border:2px solid var(--primary);background:transparent;color:var(--primary)">
+            {% if task.status == 'done' %}✓{% endif %}
+          </button>
+          <div class="flex-grow-1">
+            <a href="{% url 'tasks:detail' task.pk %}" style="color:var(--text);text-decoration:none;font-size:.9rem;font-weight:500{% if task.status == 'done' %};text-decoration:line-through;opacity:.6{% endif %}">{{ task.title }}</a>
+            {% if task.scheduled_time %}<span style="color:var(--muted);font-size:.75rem;margin-left:.5rem">{{ task.scheduled_time|time:"H:i" }}</span>{% endif %}
+          </div>
+          <span class="priority-{{ task.priority }}">{{ task.get_priority_display }}</span>
+        </div>
+        {% empty %}
+        <p style="color:var(--muted);font-size:.85rem;text-align:center;padding:1rem">Задач на сегодня нет. <a href="{% url 'tasks:create' %}" style="color:var(--primary)">Запланировать →</a></p>
+        {% endfor %}
+      </div>
+
+      <!-- Overdue -->
+      {% if overdue_tasks %}
+      <div class="card-g p-3 mb-3" style="border-color:rgba(255,101,132,0.3)">
+        <h6 style="font-weight:700;margin-bottom:1rem;color:var(--danger)">⚠️ Просроченные</h6>
+        {% for task in overdue_tasks %}
+        <div class="d-flex align-items-center justify-content-between py-2" style="border-bottom:1px solid var(--border)">
+          <div>
+            <a href="{% url 'tasks:detail' task.pk %}" style="color:var(--text);text-decoration:none;font-size:.88rem;font-weight:500">{{ task.title }}</a>
+            <div style="color:var(--danger);font-size:.75rem">дедлайн: {{ task.deadline|date:"d.m.Y" }}</div>
+          </div>
+          <span class="priority-{{ task.priority }}">{{ task.get_priority_display }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Urgent tasks -->
+      {% if urgent_tasks %}
+      <div class="card-g p-3 mb-3">
+        <h6 style="font-weight:700;margin-bottom:1rem">🔥 Срочные и важные</h6>
+        {% for task in urgent_tasks %}
+        <div class="d-flex align-items-center gap-2 py-2" style="border-bottom:1px solid var(--border)">
+          <button class="btn btn-sm p-0 complete-btn" data-task-id="{{ task.pk }}" style="width:22px;height:22px;border-radius:50%;border:2px solid var(--danger);background:transparent;color:var(--danger)">○</button>
+          <div class="flex-grow-1">
+            <a href="{% url 'tasks:detail' task.pk %}" style="color:var(--text);text-decoration:none;font-size:.88rem;font-weight:500">{{ task.title }}</a>
+          </div>
+          <span class="priority-{{ task.priority }}">{{ task.get_priority_display }}</span>
+          <a href="{% url 'tasks:focus' task.pk %}" style="color:var(--muted);font-size:.8rem"><i class="bi bi-bullseye"></i></a>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Recent done -->
+      {% if recent_done %}
+      <div class="card-g p-3">
+        <h6 style="font-weight:700;margin-bottom:1rem">✅ Недавно выполнено</h6>
+        {% for task in recent_done %}
+        <div class="d-flex align-items-center gap-2 py-2" style="border-bottom:1px solid var(--border)">
+          <span style="color:var(--accent);font-size:1.1rem">✓</span>
+          <div class="flex-grow-1">
+            <span style="color:var(--muted);font-size:.88rem;text-decoration:line-through">{{ task.title }}</span>
+          </div>
+          <span style="color:var(--accent);font-size:.78rem;font-weight:700">+{{ task.xp_reward }} XP</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Right sidebar -->
+    <div class="col-lg-3">
+      <!-- Character card -->
+      <div class="card-g p-3 mb-3 text-center" style="border-color:rgba(108,99,255,0.4)">
+        <div style="font-size:3.5rem;margin-bottom:.5rem">{{ user.avatar_emoji }}</div>
+        <div style="font-family:'Orbitron',sans-serif;font-weight:700;color:var(--primary);font-size:.9rem">{{ profile.level_title }}</div>
+        <div style="color:var(--muted);font-size:.78rem;margin-bottom:.75rem">Уровень {{ profile.level }}</div>
+        <div class="xp-bar mb-1"><div class="xp-fill" style="width:{{ profile.xp_progress_percent }}%"></div></div>
+        <div style="font-size:.72rem;color:var(--muted)">{{ profile.xp }} XP</div>
+        <div class="row g-2 mt-2">
+          <div class="col-4 text-center">
+            <div style="color:var(--warning);font-size:.9rem;font-weight:700">🔥{{ profile.streak }}</div>
+            <div style="color:var(--muted);font-size:.65rem">дней</div>
+          </div>
+          <div class="col-4 text-center">
+            <div style="color:var(--gold);font-size:.9rem;font-weight:700">💰{{ profile.coins }}</div>
+            <div style="color:var(--muted);font-size:.65rem">монет</div>
+          </div>
+          <div class="col-4 text-center">
+            <div style="color:var(--accent);font-size:.9rem;font-weight:700">✓{{ profile.tasks_completed }}</div>
+            <div style="color:var(--muted);font-size:.65rem">задач</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Daily quests -->
+      <div class="card-g p-3 mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 style="font-weight:700;margin:0;font-size:.85rem">⚡ Квесты дня</h6>
+          <a href="{% url 'gamification:quests' %}" style="color:var(--primary);font-size:.75rem">Все →</a>
+        </div>
+        {% for quest in quests %}
+        <div class="mb-2 p-2" style="background:var(--bg3);border-radius:8px">
+          <div class="d-flex justify-content-between mb-1">
+            <span style="font-size:.82rem;font-weight:500{% if quest.is_completed %};text-decoration:line-through;opacity:.6{% endif %}">{{ quest.title }}</span>
+            <span style="color:var(--accent);font-size:.72rem">+{{ quest.xp_reward }}XP</span>
+          </div>
+          <div style="background:rgba(255,255,255,0.08);border-radius:4px;height:4px;overflow:hidden">
+            <div style="background:{% if quest.is_completed %}var(--accent){% else %}var(--primary){% endif %};width:{{ quest.progress_percent }}%;height:100%;border-radius:4px"></div>
+          </div>
+        </div>
+        {% empty %}
+        <p style="color:var(--muted);font-size:.8rem;text-align:center;margin:0">Квесты загрузятся завтра</p>
+        {% endfor %}
+      </div>
+
+      <!-- Projects -->
+      <div class="card-g p-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 style="font-weight:700;margin:0;font-size:.85rem">📁 Проекты</h6>
+          <a href="{% url 'projects:create' %}" style="color:var(--primary);font-size:.75rem">+ Новый</a>
+        </div>
+        {% for project in projects %}
+        <a href="{% url 'projects:detail' project.pk %}" style="text-decoration:none;display:block;padding:.5rem;border-radius:8px;margin-bottom:.25rem;transition:background .15s" onmouseover="this.style.background='rgba(108,99,255,0.08)'" onmouseout="this.style.background='transparent'">
+          <div class="d-flex align-items-center gap-2">
+            <span style="font-size:1rem">{{ project.icon }}</span>
+            <div class="flex-grow-1">
+              <div style="font-size:.85rem;font-weight:500;color:var(--text)">{{ project.name }}</div>
+              <div style="background:rgba(255,255,255,0.1);border-radius:3px;height:3px;overflow:hidden;margin-top:.25rem">
+                <div style="background:{{ project.color }};width:{{ project.progress }}%;height:100%"></div>
+              </div>
+            </div>
+            <span style="font-size:.72rem;color:var(--muted)">{{ project.progress }}%</span>
+          </div>
+        </a>
+        {% empty %}
+        <p style="color:var(--muted);font-size:.8rem;text-align:center;margin:0">Нет проектов</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.querySelectorAll('.complete-btn').forEach(btn => {
+  btn.addEventListener('click', async function() {
+    const taskId = this.dataset.taskId;
+    const resp = await fetch(`/tasks/${taskId}/complete/`, {
+      method: 'POST',
+      headers: {'X-CSRFToken': getCookie('csrftoken')}
+    });
+    const data = await resp.json();
+    if (data.success) {
+      showXPPopup(data.xp);
+      this.closest('[class*="d-flex"]').style.opacity = '0.4';
+      setTimeout(() => location.reload(), 1000);
+    }
+  });
+});
+</script>
+{% endblock %}

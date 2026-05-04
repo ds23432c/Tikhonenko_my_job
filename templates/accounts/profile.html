@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}Профиль — Мои Дела{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:800px">
+  <div class="row g-4">
+    <div class="col-md-4">
+      <div class="card-g p-4 text-center mb-3">
+        <div style="font-size:4rem;margin-bottom:.5rem">{{ user.avatar_emoji }}</div>
+        <h4 style="font-weight:700;margin-bottom:.25rem">{{ user.username }}</h4>
+        <p style="color:var(--primary);font-weight:600;margin-bottom:.5rem">{{ user.game_profile.level_title }}</p>
+        {% if user.bio %}<p style="color:var(--muted);font-size:.85rem;margin-bottom:1rem">{{ user.bio }}</p>{% endif %}
+        <div class="xp-bar mb-1"><div class="xp-fill" style="width:{{ user.game_profile.xp_progress_percent }}%"></div></div>
+        <div style="font-size:.75rem;color:var(--muted)">{{ user.game_profile.xp }} XP · Уровень {{ user.game_profile.level }}</div>
+        <div class="row g-2 mt-3">
+          <div class="col-4"><div style="color:var(--warning);font-weight:700">🔥{{ user.game_profile.streak }}</div><div style="font-size:.7rem;color:var(--muted)">серия</div></div>
+          <div class="col-4"><div style="color:var(--gold);font-weight:700">💰{{ user.game_profile.coins }}</div><div style="font-size:.7rem;color:var(--muted)">монет</div></div>
+          <div class="col-4"><div style="color:var(--accent);font-weight:700">✓{{ user.game_profile.tasks_completed }}</div><div style="font-size:.7rem;color:var(--muted)">задач</div></div>
+        </div>
+      </div>
+      <div class="card-g p-3">
+        <div class="d-flex justify-content-between mb-2">
+          <span style="font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Статистика</span>
+        </div>
+        <div class="d-flex justify-content-between py-2" style="border-bottom:1px solid var(--border)">
+          <span style="font-size:.85rem;color:var(--muted)">Всего задач</span>
+          <strong>{{ stats.total_tasks }}</strong>
+        </div>
+        <div class="d-flex justify-content-between py-2" style="border-bottom:1px solid var(--border)">
+          <span style="font-size:.85rem;color:var(--muted)">Выполнено</span>
+          <strong style="color:var(--accent)">{{ stats.done_tasks }}</strong>
+        </div>
+        <div class="d-flex justify-content-between py-2" style="border-bottom:1px solid var(--border)">
+          <span style="font-size:.85rem;color:var(--muted)">Помодоро</span>
+          <strong>{{ user.game_profile.pomodoros_completed }}</strong>
+        </div>
+        <div class="d-flex justify-content-between py-2">
+          <span style="font-size:.85rem;color:var(--muted)">Достижений</span>
+          <strong style="color:var(--gold)">{{ stats.achievements }}</strong>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-8">
+      <div class="card-g p-4">
+        <h5 style="font-weight:700;margin-bottom:1.5rem">✏️ Редактировать профиль</h5>
+        <form method="post">
+          {% csrf_token %}
+          {% for field in form %}
+          <div class="mb-3">
+            <label class="form-label">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}<div style="color:var(--danger);font-size:.78rem;margin-top:.25rem">{{ field.errors.0 }}</div>{% endif %}
+          </div>
+          {% endfor %}
+          <button type="submit" class="btn btn-primary px-4">Сохранить</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

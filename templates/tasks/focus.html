@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="{{ user.theme|default:'dark' }}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Фокус — {{ task.title }}</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0F0F1A;--primary:#6C63FF;--accent:#43E97B;--text:#E8E8FF;--muted:#7A7A9D;--card:#1E1E35;--border:rgba(108,99,255,0.2);}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
+.task-title{font-family:'Orbitron',sans-serif;font-size:2rem;font-weight:700;margin-bottom:1rem;max-width:700px;}
+.timer{font-family:'Orbitron',sans-serif;font-size:5rem;font-weight:900;color:var(--primary);margin:2rem 0;}
+.btn{border:none;padding:.6rem 1.5rem;border-radius:8px;font-weight:600;cursor:pointer;font-size:.9rem;transition:all .2s;}
+.btn-primary{background:var(--primary);color:white;}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--muted);}
+.back-btn{position:fixed;top:1rem;left:1rem;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--muted);padding:.4rem .8rem;border-radius:8px;font-size:.82rem;text-decoration:none;transition:all .2s;}
+.back-btn:hover{color:var(--text);}
+.progress-bar{width:300px;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;margin:1rem auto;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:2px;transition:width 1s linear;}
+.subtask{display:flex;align-items:center;gap:.75rem;padding:.5rem 1rem;background:rgba(255,255,255,0.04);border-radius:8px;margin:.25rem 0;text-align:left;}
+.subtask input{width:18px;height:18px;cursor:pointer;}
+.quote{font-size:.9rem;color:var(--muted);font-style:italic;max-width:500px;margin-top:2rem;}
+</style>
+</head>
+<body>
+<a class="back-btn" href="{% url 'tasks:detail' task.pk %}">← Выйти из фокуса</a>
+
+<div style="font-size:2rem;margin-bottom:.5rem">{% if task.priority == 'urgent' %}🔴{% elif task.priority == 'high' %}🟠{% elif task.priority == 'medium' %}🟡{% else %}🟢{% endif %}</div>
+<div class="task-title">{{ task.title }}</div>
+{% if task.description %}
+<p style="color:var(--muted);font-size:.9rem;max-width:500px;line-height:1.7;margin-bottom:1rem">{{ task.description }}</p>
+{% endif %}
+
+<div class="timer" id="elapsed">00:00</div>
+<div class="progress-bar"><div class="progress-fill" id="pbar" style="width:0%"></div></div>
+<p style="color:var(--muted);font-size:.8rem" id="elapsed-label">Время в фокусе</p>
+
+{% if task.subtasks.count %}
+<div style="margin:1.5rem 0;width:100%;max-width:400px">
+  <p style="color:var(--muted);font-size:.8rem;margin-bottom:.5rem;text-transform:uppercase;letter-spacing:1px">Подзадачи</p>
+  {% for sub in task.subtasks.all %}
+  <div class="subtask">
+    <input type="checkbox" {% if sub.is_done %}checked{% endif %}>
+    <span style="{% if sub.is_done %}text-decoration:line-through;opacity:.5{% endif %}">{{ sub.title }}</span>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="d-flex gap-3 mt-2">
+  <button class="btn btn-primary" id="done-btn" onclick="completeTask()">✓ Выполнено</button>
+  <a href="{% url 'tasks:pomodoro_task' task.pk %}" class="btn btn-outline">🍅 Помодоро</a>
+</div>
+
+<div class="quote">"{{ request.session.quote|default:'Фокус — это умение говорить нет тысяче вещей.' }}"</div>
+
+<script>
+let seconds = 0;
+let interval = setInterval(() => {
+  seconds++;
+  const m = Math.floor(seconds/60).toString().padStart(2,'0');
+  const s = (seconds%60).toString().padStart(2,'0');
+  document.getElementById('elapsed').textContent = m + ':' + s;
+  // Progress bar fills over 50 minutes
+  const pct = Math.min((seconds / 3000) * 100, 100);
+  document.getElementById('pbar').style.width = pct + '%';
+}, 1000);
+
+async function completeTask() {
+  clearInterval(interval);
+  const resp = await fetch('/tasks/{{ task.pk }}/complete/', {
+    method: 'POST',
+    headers: {'X-CSRFToken': getCsrf()}
+  });
+  const data = await resp.json();
+  if (data.success) {
+    document.getElementById('done-btn').textContent = '✓ Готово! +' + data.xp + ' XP';
+    document.getElementById('done-btn').style.background = '#43E97B';
+    document.getElementById('done-btn').style.color = '#000';
+    setTimeout(() => window.location.href = '/tasks/', 1500);
+  }
+}
+function getCsrf() {
+  let v = document.cookie.match('(^|;) ?csrftoken=([^;]*)(;|$)');
+  return v ? v[2] : '';
+}
+</script>
+</body>
+</html>

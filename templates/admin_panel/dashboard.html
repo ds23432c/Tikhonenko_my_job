@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}Панель администратора — Мои Дела{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="row g-4">
+    <div class="col-lg-3">
+      <div class="card-g p-3">
+        <div style="font-family:'Orbitron',sans-serif;font-weight:700;color:var(--primary);font-size:.9rem;padding:.5rem 1rem;margin-bottom:.5rem">⚙️ АДМИН</div>
+        <nav class="d-flex flex-column gap-1">
+          <a href="{% url 'admin_panel:dashboard' %}" class="sidebar-link active"><i class="bi bi-speedometer2"></i>Дашборд</a>
+          <a href="{% url 'admin_panel:users' %}" class="sidebar-link"><i class="bi bi-people"></i>Пользователи</a>
+          <a href="{% url 'admin_panel:achievements' %}" class="sidebar-link"><i class="bi bi-trophy"></i>Достижения</a>
+          <hr style="border-color:var(--border)">
+          <a href="{% url 'django-admin:index' %}" class="sidebar-link"><i class="bi bi-database"></i>Django Admin</a>
+          <a href="{% url 'core:home' %}" class="sidebar-link"><i class="bi bi-house"></i>На сайт</a>
+        </nav>
+      </div>
+    </div>
+    <div class="col-lg-9">
+      <h4 style="font-family:'Orbitron',sans-serif;font-weight:700;margin-bottom:1.5rem">📊 Дашборд</h4>
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+          <div class="card-g p-3 text-center">
+            <div class="stat-num">{{ stats.total_users }}</div>
+            <div style="color:var(--muted);font-size:.72rem;text-transform:uppercase">Пользователей</div>
+            <div style="color:var(--accent);font-size:.72rem;margin-top:.25rem">+{{ stats.new_users_week }} за неделю</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="card-g p-3 text-center">
+            <div class="stat-num">{{ stats.total_tasks }}</div>
+            <div style="color:var(--muted);font-size:.72rem;text-transform:uppercase">Задач всего</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="card-g p-3 text-center">
+            <div class="stat-num" style="color:var(--accent)">{{ stats.done_tasks }}</div>
+            <div style="color:var(--muted);font-size:.72rem;text-transform:uppercase">Выполнено</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="card-g p-3 text-center">
+            <div class="stat-num" style="color:var(--warning)">{{ stats.tasks_week }}</div>
+            <div style="color:var(--muted);font-size:.72rem;text-transform:uppercase">За неделю</div>
+          </div>
+        </div>
+      </div>
+      <div class="row g-4">
+        <div class="col-md-6">
+          <div class="card-g p-4">
+            <h6 style="font-weight:700;margin-bottom:1rem">🏆 Топ пользователи</h6>
+            {% for u in top_users %}
+            <div class="d-flex align-items-center gap-2 py-2" style="border-bottom:1px solid var(--border)">
+              <span style="color:{% if forloop.counter == 1 %}#FFD700{% elif forloop.counter == 2 %}#C0C0C0{% elif forloop.counter == 3 %}#CD7F32{% else %}var(--muted){% endif %};font-weight:700;min-width:24px">{% if forloop.counter <= 3 %}{% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% else %}🥉{% endif %}{% else %}#{{ forloop.counter }}{% endif %}</span>
+              <span style="font-size:1.2rem">{{ u.avatar_emoji }}</span>
+              <div class="flex-grow-1">
+                <div style="font-weight:600;font-size:.88rem">{{ u.username }}</div>
+                <div style="color:var(--muted);font-size:.75rem">{{ u.game_profile.level_title }}</div>
+              </div>
+              <span style="color:var(--accent);font-weight:700;font-size:.85rem">{{ u.game_profile.xp }} XP</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card-g p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h6 style="font-weight:700;margin:0">👥 Новые пользователи</h6>
+              <a href="{% url 'admin_panel:users' %}" style="color:var(--primary);font-size:.8rem">Все →</a>
+            </div>
+            {% for u in recent_users %}
+            <div class="d-flex align-items-center gap-2 py-2" style="border-bottom:1px solid var(--border)">
+              <span style="font-size:1.2rem">{{ u.avatar_emoji }}</span>
+              <div class="flex-grow-1">
+                <div style="font-weight:600;font-size:.88rem">{{ u.username }}</div>
+                <div style="color:var(--muted);font-size:.75rem">{{ u.date_joined|date:"d.m.Y" }}</div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% block title %}Помодоро — Мои Дела{% endblock %}
+{% block extra_css %}
+<style>
+.timer-container{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh}
+.timer-circle{width:240px;height:240px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;margin:2rem 0}
+.timer-circle svg{position:absolute;top:0;left:0;transform:rotate(-90deg)}
+.timer-circle circle{fill:none;stroke-width:8;transition:stroke-dashoffset 1s linear}
+.timer-inner{text-align:center;z-index:1}
+.timer-display{font-family:'Orbitron',sans-serif;font-size:3.5rem;font-weight:900;line-height:1}
+.mode-btn{background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:20px;padding:.35rem 1rem;font-size:.82rem;cursor:pointer;transition:all .2s}
+.mode-btn.active{background:var(--primary);color:white;border-color:var(--primary)}
+</style>
+{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:600px">
+  <h4 style="font-family:'Orbitron',sans-serif;font-weight:700;text-align:center;margin-bottom:1.5rem">🍅 Помодоро-таймер</h4>
+
+  <!-- Mode selector -->
+  <div class="d-flex justify-content-center gap-2 mb-3">
+    <button class="mode-btn active" id="mode-work" onclick="setMode('work',25)">Работа 25м</button>
+    <button class="mode-btn" id="mode-short" onclick="setMode('short',5)">Перерыв 5м</button>
+    <button class="mode-btn" id="mode-long" onclick="setMode('long',15)">Долгий 15м</button>
+  </div>
+
+  <!-- Task selector -->
+  <div class="card-g p-3 mb-3">
+    <label class="form-label">Задача</label>
+    <select class="form-select" id="task-select">
+      <option value="">Без задачи</option>
+      {% for t in tasks %}
+      <option value="{{ t.pk }}" {% if task and task.pk == t.pk %}selected{% endif %}>{{ t.title|truncatechars:60 }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <!-- Timer -->
+  <div class="timer-container">
+    <div class="timer-circle">
+      <svg width="240" height="240" viewBox="0 0 240 240">
+        <circle cx="120" cy="120" r="108" stroke="rgba(255,255,255,0.08)" stroke-width="8"/>
+        <circle id="progress-ring" cx="120" cy="120" r="108" stroke="var(--primary)" stroke-width="8" stroke-linecap="round"
+          stroke-dasharray="678.5" stroke-dashoffset="0"/>
+      </svg>
+      <div class="timer-inner">
+        <div class="timer-display" id="timer-display">25:00</div>
+        <div style="color:var(--muted);font-size:.8rem;margin-top:.25rem" id="timer-label">Время работать!</div>
+        <div style="color:var(--accent);font-size:.8rem;margin-top:.25rem">🍅 <span id="pomo-count">0</span> сегодня</div>
+      </div>
+    </div>
+    <div class="d-flex gap-3">
+      <button class="btn btn-primary px-4" id="start-btn" onclick="startTimer()">▶ Старт</button>
+      <button class="btn btn-outline-primary px-4" onclick="resetTimer()">↺ Сброс</button>
+    </div>
+  </div>
+
+  <!-- Tips -->
+  <div class="card-g p-3 mt-3">
+    <h6 style="font-weight:700;margin-bottom:.5rem;font-size:.85rem">💡 Метод Помодоро</h6>
+    <ol style="color:var(--muted);font-size:.83rem;line-height:1.8;margin:0;padding-left:1.2rem">
+      <li>Выбери задачу</li>
+      <li>Работай 25 минут без отвлечений</li>
+      <li>Сделай короткий перерыв 5 минут</li>
+      <li>После 4 помодоро — долгий перерыв 15-30 минут</li>
+    </ol>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+let totalSeconds = 25 * 60;
+let remainingSeconds = totalSeconds;
+let interval = null;
+let isRunning = false;
+let pomoCount = 0;
+const circumference = 2 * Math.PI * 108;
+
+function setMode(mode, minutes) {
+  resetTimer();
+  totalSeconds = minutes * 60;
+  remainingSeconds = totalSeconds;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('mode-' + mode).classList.add('active');
+  const labels = {work:'Время работать!', short:'Короткий перерыв', long:'Долгий перерыв'};
+  document.getElementById('timer-label').textContent = labels[mode];
+  updateDisplay();
+}
+
+function updateDisplay() {
+  const m = Math.floor(remainingSeconds / 60).toString().padStart(2,'0');
+  const s = (remainingSeconds % 60).toString().padStart(2,'0');
+  document.getElementById('timer-display').textContent = m + ':' + s;
+  const progress = (totalSeconds - remainingSeconds) / totalSeconds;
+  const offset = circumference * (1 - progress);
+  document.getElementById('progress-ring').style.strokeDashoffset = offset;
+  document.title = m + ':' + s + ' — Помодоро';
+}
+
+function startTimer() {
+  if (isRunning) {
+    clearInterval(interval);
+    isRunning = false;
+    document.getElementById('start-btn').textContent = '▶ Продолжить';
+    return;
+  }
+  isRunning = true;
+  document.getElementById('start-btn').textContent = '⏸ Пауза';
+  interval = setInterval(async () => {
+    remainingSeconds--;
+    updateDisplay();
+    if (remainingSeconds <= 0) {
+      clearInterval(interval);
+      isRunning = false;
+      document.getElementById('start-btn').textContent = '▶ Старт';
+      pomoCount++;
+      document.getElementById('pomo-count').textContent = pomoCount;
+      // Notify
+      if (Notification.permission === 'granted') {
+        new Notification('Помодоро завершён! 🍅', {body: 'Время для перерыва!'});
+      }
+      // Save to server
+      const taskId = document.getElementById('task-select').value;
+      await fetch('/tasks/pomodoro/complete/', {
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},
+        body: JSON.stringify({task_id: taskId || null, duration: Math.floor(totalSeconds / 60)})
+      });
+      showXPPopup(5);
+      alert('🍅 Помодоро завершён! +5 XP');
+    }
+  }, 1000);
+}
+
+function resetTimer() {
+  clearInterval(interval);
+  isRunning = false;
+  remainingSeconds = totalSeconds;
+  document.getElementById('start-btn').textContent = '▶ Старт';
+  updateDisplay();
+}
+
+// Request notification permission
+if ('Notification' in window && Notification.permission === 'default') {
+  Notification.requestPermission();
+}
+updateDisplay();
+</script>
+{% endblock %}

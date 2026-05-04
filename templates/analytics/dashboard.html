@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+{% block title %}Аналитика — Мои Дела{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <h4 style="font-family:'Orbitron',sans-serif;font-weight:700;margin-bottom:1.5rem">📊 Аналитика</h4>
+
+  <!-- Main stats -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="card-g p-3 text-center">
+        <div class="stat-num">{{ stats.total }}</div>
+        <div style="color:var(--muted);font-size:.75rem;text-transform:uppercase;letter-spacing:.5px">Всего задач</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card-g p-3 text-center">
+        <div class="stat-num" style="color:var(--accent)">{{ stats.done }}</div>
+        <div style="color:var(--muted);font-size:.75rem;text-transform:uppercase;letter-spacing:.5px">Выполнено</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card-g p-3 text-center">
+        <div class="stat-num" style="color:var(--warning)">{{ stats.completion_rate }}%</div>
+        <div style="color:var(--muted);font-size:.75rem;text-transform:uppercase;letter-spacing:.5px">Эффективность</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card-g p-3 text-center">
+        <div class="stat-num" style="color:var(--danger)">{{ stats.overdue }}</div>
+        <div style="color:var(--muted);font-size:.75rem;text-transform:uppercase;letter-spacing:.5px">Просрочено</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card-g p-3 text-center">
+        <div class="stat-num" style="color:var(--warning)">🔥{{ streak }}</div>
+        <div style="color:var(--muted);font-size:.75rem;text-transform:uppercase;letter-spacing:.5px">Серия дней</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card-g p-3 text-center">
+        <div class="stat-num">{{ max_streak }}</div>
+        <div style="color:var(--muted);font-size:.75rem;text-transform:uppercase;letter-spacing:.5px">Рекорд серии</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card-g p-3 text-center">
+        <div class="stat-num" style="color:var(--accent)">{{ stats.this_week }}</div>
+        <div style="color:var(--muted);font-size:.75rem;text-transform:uppercase;letter-spacing:.5px">За неделю</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card-g p-3 text-center">
+        <div class="stat-num">🍅{{ stats.pomodoros }}</div>
+        <div style="color:var(--muted);font-size:.75rem;text-transform:uppercase;letter-spacing:.5px">Помодоро</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Daily chart -->
+    <div class="col-lg-8">
+      <div class="card-g p-4">
+        <h6 style="font-weight:700;margin-bottom:1.5rem">📈 Задачи за 14 дней</h6>
+        <canvas id="dailyChart" height="100"></canvas>
+      </div>
+    </div>
+
+    <!-- Priority breakdown -->
+    <div class="col-lg-4">
+      <div class="card-g p-4">
+        <h6 style="font-weight:700;margin-bottom:1.5rem">🎯 По приоритетам</h6>
+        <canvas id="priorityChart" height="180"></canvas>
+      </div>
+    </div>
+
+    <!-- Weekday chart -->
+    <div class="col-lg-6">
+      <div class="card-g p-4">
+        <h6 style="font-weight:700;margin-bottom:1.5rem">📅 Продуктивность по дням недели</h6>
+        <canvas id="weekdayChart" height="120"></canvas>
+      </div>
+    </div>
+
+    <!-- Character stats -->
+    <div class="col-lg-6">
+      <div class="card-g p-4">
+        <h6 style="font-weight:700;margin-bottom:1.5rem">🎮 Персонаж</h6>
+        <div class="text-center mb-3">
+          <div style="font-size:3rem;margin-bottom:.5rem">{{ user.avatar_emoji }}</div>
+          <div style="font-family:'Orbitron',sans-serif;color:var(--primary);font-weight:700">{{ profile.level_title }}</div>
+          <div style="color:var(--muted);font-size:.82rem">Уровень {{ profile.level }}</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.08);border-radius:8px;height:10px;overflow:hidden;margin-bottom:.5rem">
+          <div style="background:linear-gradient(90deg,var(--primary),var(--accent));width:{{ profile.xp_progress_percent }}%;height:100%;border-radius:8px;transition:width 1s"></div>
+        </div>
+        <div class="d-flex justify-content-between mb-3">
+          <span style="font-size:.75rem;color:var(--muted)">{{ profile.xp }} XP</span>
+          <span style="font-size:.75rem;color:var(--muted)">Ур. {{ profile.level|add:1 }}</span>
+        </div>
+        <div class="row g-2">
+          <div class="col-4 text-center">
+            <div style="color:var(--gold);font-weight:700">💰{{ profile.coins }}</div>
+            <div style="font-size:.7rem;color:var(--muted)">монет</div>
+          </div>
+          <div class="col-4 text-center">
+            <div style="color:var(--warning);font-weight:700">🔥{{ profile.streak }}</div>
+            <div style="font-size:.7rem;color:var(--muted)">серия</div>
+          </div>
+          <div class="col-4 text-center">
+            <div style="color:var(--accent);font-weight:700">✓{{ profile.tasks_completed }}</div>
+            <div style="font-size:.7rem;color:var(--muted)">задач</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const dailyData = {{ daily_data_json|safe }};
+const priorityData = {{ priority_data_json|safe }};
+const weekdayData = {{ weekday_data_json|safe }};
+
+const chartDefaults = {
+  color: 'rgba(232,232,255,0.6)',
+  grid: 'rgba(108,99,255,0.1)',
+};
+
+// Daily chart
+new Chart(document.getElementById('dailyChart'), {
+  type: 'bar',
+  data: {
+    labels: dailyData.map(d => d.date),
+    datasets: [{
+      label: 'Выполнено',
+      data: dailyData.map(d => d.count),
+      backgroundColor: 'rgba(108,99,255,0.5)',
+      borderColor: 'rgba(108,99,255,1)',
+      borderWidth: 1,
+      borderRadius: 4,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { color: chartDefaults.color, font: { size: 10 } }, grid: { color: chartDefaults.grid } },
+      y: { ticks: { color: chartDefaults.color }, grid: { color: chartDefaults.grid }, beginAtZero: true }
+    }
+  }
+});
+
+// Priority doughnut
+new Chart(document.getElementById('priorityChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Срочный', 'Высокий', 'Средний', 'Низкий'],
+    datasets: [{
+      data: [priorityData.urgent, priorityData.high, priorityData.medium, priorityData.low],
+      backgroundColor: ['rgba(255,101,132,0.7)', 'rgba(255,167,38,0.7)', 'rgba(108,99,255,0.7)', 'rgba(67,233,123,0.7)'],
+      borderWidth: 0,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { labels: { color: chartDefaults.color, font: { size: 11 } } } },
+    cutout: '65%',
+  }
+});
+
+// Weekday bar
+new Chart(document.getElementById('weekdayChart'), {
+  type: 'bar',
+  data: {
+    labels: weekdayData.map(d => d.day),
+    datasets: [{
+      label: 'Задач выполнено',
+      data: weekdayData.map(d => d.count),
+      backgroundColor: 'rgba(67,233,123,0.4)',
+      borderColor: 'rgba(67,233,123,0.8)',
+      borderWidth: 1,
+      borderRadius: 4,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { color: chartDefaults.color }, grid: { color: chartDefaults.grid } },
+      y: { ticks: { color: chartDefaults.color }, grid: { color: chartDefaults.grid }, beginAtZero: true }
+    }
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Достижения — Админ{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="row g-4">
+    <div class="col-lg-3">
+      <div class="card-g p-3">
+        <div style="font-family:'Orbitron',sans-serif;font-weight:700;color:var(--primary);font-size:.9rem;padding:.5rem 1rem;margin-bottom:.5rem">⚙️ АДМИН</div>
+        <nav class="d-flex flex-column gap-1">
+          <a href="{% url 'admin_panel:dashboard' %}" class="sidebar-link"><i class="bi bi-speedometer2"></i>Дашборд</a>
+          <a href="{% url 'admin_panel:users' %}" class="sidebar-link"><i class="bi bi-people"></i>Пользователи</a>
+          <a href="{% url 'admin_panel:achievements' %}" class="sidebar-link active"><i class="bi bi-trophy"></i>Достижения</a>
+          <hr style="border-color:var(--border)">
+          <a href="{% url 'core:home' %}" class="sidebar-link"><i class="bi bi-house"></i>На сайт</a>
+        </nav>
+      </div>
+    </div>
+    <div class="col-lg-9">
+      <h4 style="font-family:'Orbitron',sans-serif;font-weight:700;margin-bottom:1.5rem">🏆 Достижения</h4>
+      <div class="row g-3">
+        {% for ach in achievements %}
+        <div class="col-md-6">
+          <div class="card-g p-3 d-flex align-items-center gap-3">
+            <div style="font-size:2rem;min-width:44px;text-align:center">{{ ach.icon }}</div>
+            <div class="flex-grow-1">
+              <div style="font-weight:700;font-size:.9rem">{{ ach.title }}</div>
+              <div style="color:var(--muted);font-size:.78rem">{{ ach.description }}</div>
+              <div style="color:var(--muted);font-size:.72rem;margin-top:.2rem">{{ ach.condition_type }} ≥ {{ ach.condition_value }}</div>
+            </div>
+            <div style="text-align:right">
+              <div style="color:var(--accent);font-weight:700;font-size:.82rem">+{{ ach.xp_reward }} XP</div>
+              <div style="color:var(--gold);font-size:.78rem">💰{{ ach.coins_reward }}</div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

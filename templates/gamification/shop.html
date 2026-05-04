@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}Магазин — Мои Дела{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 style="font-family:'Orbitron',sans-serif;font-weight:700;margin:0">🛍️ Магазин</h4>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:.4rem 1rem;font-weight:700;color:var(--gold)">
+      💰 {{ profile.coins }} монет
+    </div>
+  </div>
+  <p style="color:var(--muted);font-size:.85rem;margin-bottom:2rem">Трать монеты на темы оформления, рамки и значки. Монеты зарабатываются выполнением задач и квестов.</p>
+  <div class="row g-3">
+    {% for item in items %}
+    <div class="col-md-4 col-lg-3">
+      <div class="card-g p-4 text-center h-100">
+        <div style="font-size:3rem;margin-bottom:.75rem">{{ item.icon }}</div>
+        <h6 style="font-weight:700;margin-bottom:.25rem">{{ item.name }}</h6>
+        <p style="color:var(--muted);font-size:.8rem;margin-bottom:1rem">{{ item.description }}</p>
+        <div style="font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom.75rem">{{ item.get_item_type_display }}</div>
+        {% if item.id in owned_ids %}
+        <button class="btn btn-sm w-100 mt-auto" style="background:rgba(67,233,123,0.15);color:var(--accent);border:1px solid rgba(67,233,123,0.3)">✓ Куплено</button>
+        {% elif profile.coins >= item.price_coins %}
+        <button class="btn btn-primary btn-sm w-100 mt-auto buy-btn" data-item-id="{{ item.id }}" data-price="{{ item.price_coins }}">
+          💰 {{ item.price_coins }} монет
+        </button>
+        {% else %}
+        <button class="btn btn-sm w-100 mt-auto" style="background:rgba(255,255,255,0.05);color:var(--muted);border:1px solid var(--border)" disabled>
+          💰 {{ item.price_coins }} (не хватает)
+        </button>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.querySelectorAll('.buy-btn').forEach(btn => {
+  btn.addEventListener('click', async function() {
+    const itemId = this.dataset.itemId;
+    const price = this.dataset.price;
+    if (!confirm(`Купить за ${price} монет?`)) return;
+    const resp = await fetch(`/gamification/shop/${itemId}/buy/`, {
+      method: 'POST', headers: {'X-CSRFToken': getCookie('csrftoken')}
+    });
+    const data = await resp.json();
+    if (data.success) {
+      this.textContent = '✓ Куплено';
+      this.style.background = 'rgba(67,233,123,0.15)';
+      this.style.color = 'var(--accent)';
+      this.disabled = true;
+      document.querySelector('[style*="монет"]').textContent = '💰 ' + data.coins_left + ' монет';
+    } else {
+      alert(data.error || 'Ошибка');
+    }
+  });
+});
+</script>
+{% endblock %}

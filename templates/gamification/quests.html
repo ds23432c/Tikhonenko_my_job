@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Ежедневные квесты — Мои Дела{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:700px">
+  <h4 style="font-family:'Orbitron',sans-serif;font-weight:700;margin-bottom:1.5rem">⚡ Ежедневные квесты</h4>
+  <p style="color:var(--muted);font-size:.85rem;margin-bottom:2rem">Выполняй квесты чтобы получать бонусный опыт. Обновляются каждый день!</p>
+  <div class="d-flex flex-column gap-3">
+    {% for quest in quests %}
+    <div class="card-g p-4 {% if quest.is_completed %}{% endif %}" style="{% if quest.is_completed %}opacity:.6{% endif %}">
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <div>
+          <h6 style="font-weight:700;margin-bottom:.25rem{% if quest.is_completed %};text-decoration:line-through{% endif %}">{{ quest.title }}</h6>
+          <p style="color:var(--muted);font-size:.85rem;margin:0">{{ quest.description }}</p>
+        </div>
+        <div class="text-end ms-3">
+          <div style="color:var(--accent);font-weight:700;font-size:.9rem">+{{ quest.xp_reward }} XP</div>
+          <div style="color:var(--gold);font-size:.8rem">💰{{ quest.coins_reward }}</div>
+        </div>
+      </div>
+      <div class="d-flex align-items-center gap-2 mt-2">
+        <div style="flex-grow:1;background:rgba(255,255,255,0.08);border-radius:4px;height:6px;overflow:hidden">
+          <div style="background:{% if quest.is_completed %}var(--accent){% else %}var(--primary){% endif %};width:{{ quest.progress_percent }}%;height:100%;border-radius:4px;transition:width .5s"></div>
+        </div>
+        <span style="font-size:.78rem;color:var(--muted);white-space:nowrap">{{ quest.current_value }}/{{ quest.target_value }}</span>
+        {% if quest.is_completed %}<span style="color:var(--accent);font-size:.9rem">✓</span>{% endif %}
+      </div>
+    </div>
+    {% empty %}
+    <div class="text-center py-5">
+      <div style="font-size:3rem;margin-bottom:1rem">⚡</div>
+      <p style="color:var(--muted)">Квесты появятся завтра!</p>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
