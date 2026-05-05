@@ -14,7 +14,21 @@ ALLOWED_HOSTS = [
     for host in os.environ.get('ALLOWED_HOSTS', 'tikhonenkomyjob-production.up.railway.app,localhost').split(',')
     if host.strip()
 ]
-CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', 'https://*.railway.app,http://localhost').split(',')
+def _normalize_csrf_origin(origin):
+    origin = origin.strip()
+    if not origin:
+        return ''
+    if origin.startswith(('http://', 'https://')):
+        return origin
+    if origin.startswith('*.'):
+        return f'https://{origin}'
+    return f'https://{origin}'
+
+CSRF_TRUSTED_ORIGINS = [
+    _normalize_csrf_origin(origin)
+    for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', 'https://*.railway.app,http://localhost').split(',')
+    if origin.strip()
+]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
