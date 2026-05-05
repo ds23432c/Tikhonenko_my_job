@@ -13,7 +13,7 @@
         <form method="post">
           {% csrf_token %}
           <div class="mb-3">
-            <label class="form-label">Email</label>
+            <label class="form-label">Почта</label>
             {{ form.username }}
             {% if form.username.errors %}<div style="color:var(--danger);font-size:.78rem;margin-top:.25rem">{{ form.username.errors.0 }}</div>{% endif %}
           </div>

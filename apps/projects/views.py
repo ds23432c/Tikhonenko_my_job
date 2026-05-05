@@ -9,6 +9,13 @@ class ProjectForm(forms.ModelForm):
     class Meta:
         model = Project
         fields = ['name', 'description', 'color', 'icon', 'deadline']
+        labels = {
+            'name': 'Название',
+            'description': 'Описание',
+            'color': 'Цвет',
+            'icon': 'Иконка',
+            'deadline': 'Дедлайн',
+        }
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Название проекта'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),

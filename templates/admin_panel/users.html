@@ -22,7 +22,7 @@
           <thead>
             <tr>
               <th>Пользователь</th>
-              <th>Email</th>
+              <th>Почта</th>
               <th>Уровень</th>
               <th>XP</th>
               <th>Задач</th>
@@ -38,7 +38,7 @@
                 <div class="d-flex align-items-center gap-2">
                   <span style="font-size:1.2rem">{{ u.avatar_emoji }}</span>
                   <span style="font-weight:600;font-size:.88rem">{{ u.username }}</span>
-                  {% if u.is_staff %}<span style="background:rgba(255,101,132,0.15);color:var(--danger);border-radius:4px;padding:1px 6px;font-size:.68rem">ADMIN</span>{% endif %}
+                  {% if u.is_staff %}<span style="background:rgba(255,101,132,0.15);color:var(--danger);border-radius:4px;padding:1px 6px;font-size:.68rem">АДМИН</span>{% endif %}
                 </div>
               </td>
               <td style="font-size:.82rem;color:var(--muted)">{{ u.email }}</td>
